@@ -318,6 +318,97 @@
     }
     .bottom-bar.visible { opacity: 1; }
 
+    @media (max-width: 640px) {
+      /* Nav — hide links, show hamburger */
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      .nav-plus { margin-left: auto; font-size: 22px; }
+      .nav-logo-mark { width: 34px; }
+      .nav-wordmark { font-size: 11px; }
+      .nav-sub { font-size: 7px; }
+
+      /* Hero */
+      #hero { padding: 0 20px 70px; }
+      h1 { font-size: clamp(36px, 11vw, 52px); line-height: 0.95; }
+      .hero-desc { font-size: 9px; }
+      .hero-cta { font-size: 9px; padding: 11px 16px; }
+
+      /* Terrain — show as background, full width, dimmed */
+      #canvas {
+        -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 90%);
+        mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 90%);
+        opacity: 0.4;
+      }
+
+      /* Bottom bar */
+      .bottom-bar { padding: 14px 20px; font-size: 8px; }
+    }
+
+    @media (max-width: 768px) {
+      nav {
+        padding: 14px 20px;
+      }
+      .nav-links {
+        display: none;
+      }
+      .nav-plus {
+        display: none;
+      }
+      .nav-wordmark {
+        font-size: 11px;
+      }
+      .nav-sub {
+        font-size: 7px;
+      }
+      .nav-logo-mark {
+        width: 34px;
+      }
+
+      #hero {
+        padding: 0 20px 70px;
+        justify-content: flex-end;
+      }
+
+      h1 {
+        font-size: 13vw;
+        line-height: 0.92;
+        margin-bottom: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .hero-desc {
+        font-size: 8px;
+        letter-spacing: 2px;
+        margin-bottom: 24px;
+      }
+
+      .hero-cta {
+        font-size: 9px;
+        padding: 10px 16px;
+      }
+
+      .hero-plus {
+        margin-bottom: 10px;
+      }
+
+      #canvas {
+        -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 70%, transparent 100%),
+                            linear-gradient(to right, transparent 0%, black 30%, black 100%);
+        mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 70%, transparent 100%),
+                    linear-gradient(to right, transparent 0%, black 30%, black 100%);
+        -webkit-mask-composite: destination-in;
+        mask-composite: intersect;
+      }
+
+      .bottom-bar {
+        padding: 12px 20px;
+        font-size: 8px;
+      }
+
+      .bracket { display: none; }
+    }
+
     .scanline {
       position: fixed;
       inset: 0;
