@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magnets Studio — Prop House</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --paper:#E4E2DB;
+  --card:#F3F2ED;
+  --ink:#17181A;
+  --soft:#6A6B64;
+  --rule:#C6C4BA;
+  --blue:#1E2BD6;
+  --blue-wash:rgba(30,43,214,.07);
+  --shelf:#D6D3CA;
+  --s:8px;
+  --maxw:1560px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+a{color:var(--blue)}
+
+.hidden{display:none !important}
+.adminbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--ink);color:var(--paper);
+  display:flex;align-items:center;gap:12px;padding:9px 18px;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;
+}
+.adminbar .tag{background:var(--paper);color:var(--ink);padding:2px 8px;text-transform:uppercase;font-weight:600}
+.adminbar.dirty .tag{background:var(--blue);color:#fff}
+.adminbar .sp{flex:1}
+.adminbar .topbtn{border-color:var(--paper);color:var(--paper)}
+.adminbar .topbtn:hover{background:var(--paper);color:var(--ink)}
+body.hasbar{padding-bottom:44px}
+.editbtn{margin-left:8px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.wide{font-family:"Archivo",system-ui,sans-serif;font-variation-settings:"wdth" 125;letter-spacing:-.01em}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  border-bottom:1px solid var(--rule);
+  position:sticky;top:0;z-index:40;
+  background:var(--paper);
+}
+.topbar .wrap{display:flex;align-items:center;gap:16px;height:46px}
+.brand{
+  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink);white-space:nowrap;
+}
+.brand span{color:var(--soft)}
+.topbar .spacer{flex:1}
+.topbtn{
+  background:none;border:1px solid var(--ink);border-radius:0;
+  padding:5px 12px;font-family:"IBM Plex Mono",monospace;font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;
+}
+.topbtn:hover{background:var(--ink);color:var(--paper)}
+.topbtn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.topbtn.primary:hover{background:var(--ink);border-color:var(--ink)}
+.topbtn .count{font-weight:600}
+
+/* ---------- masthead ---------- */
+.masthead{padding:44px 0 22px;border-bottom:1px solid var(--rule)}
+.masthead h1{
+  font-family:"Archivo",sans-serif;font-variation-settings:"wdth" 125;
+  font-weight:800;text-transform:uppercase;
+  font-size:clamp(34px,7.2vw,86px);line-height:.9;letter-spacing:-.03em;
+  margin:0 0 6px;
+}
+.masthead .sub{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--soft);margin-bottom:26px;
+}
+.searchrow{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.searchfield{flex:1;min-width:280px;position:relative;border-bottom:2px solid var(--ink)}
+.searchfield input{
+  width:100%;background:none;border:0;outline:none;
+  font-family:"Archivo",sans-serif;font-variation-settings:"wdth" 100;
+  font-size:clamp(20px,3.2vw,34px);font-weight:500;padding:2px 0 8px;
+}
+.searchfield input::placeholder{color:#A9A79E}
+.searchfield:focus-within{border-color:var(--blue)}
+.tally{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--soft);
+  padding-bottom:10px;white-space:nowrap;letter-spacing:.06em;
+}
+.tally b{color:var(--ink);font-weight:600}
+
+/* ---------- controls ---------- */
+.controls{
+  position:sticky;top:46px;z-index:30;background:var(--paper);
+  border-bottom:1px solid var(--rule);
+}
+.controls .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.chip{
+  border:1px solid var(--rule);background:transparent;border-radius:999px;
+  padding:5px 13px;font-size:12.5px;letter-spacing:.02em;white-space:nowrap;
+}
+.chip:hover{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chip .n{font-family:"IBM Plex Mono",monospace;font-size:10.5px;opacity:.55;margin-left:6px}
+.divider{width:1px;height:22px;background:var(--rule)}
+.ctrl{display:flex;align-items:center;gap:7px;font-family:"IBM Plex Mono",monospace;font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--soft)}
+.ctrl input[type=range]{width:110px;accent-color:var(--blue)}
+.ctrl select{background:none;border:1px solid var(--rule);padding:4px 8px;font-family:"IBM Plex Mono",monospace;font-size:11px}
+.ctrl b{color:var(--ink);font-weight:600}
+.linkbtn{background:none;border:0;padding:0;color:var(--blue);font-family:"IBM Plex Mono",monospace;font-size:11px;text-transform:uppercase;letter-spacing:.09em;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- grid ---------- */
+.sectionhead{
+  display:flex;align-items:baseline;gap:14px;
+  padding:34px 0 12px;
+}
+.sectionhead .num{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--blue);letter-spacing:.1em;
+}
+.sectionhead h2{
+  font-family:"Archivo",sans-serif;font-variation-settings:"wdth" 112;
+  font-weight:700;text-transform:uppercase;font-size:20px;letter-spacing:.01em;margin:0;
+}
+.sectionhead .rule{flex:1;height:1px;background:var(--rule);position:relative;top:-4px}
+.sectionhead .cnt{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--soft)}
+
+.grid{
+  display:grid;gap:26px 20px;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  padding-bottom:20px;
+}
+.card{
+  background:transparent;border:0;padding:0;text-align:left;
+  display:flex;flex-direction:column;
+}
+.card:focus-visible{outline:2px solid var(--blue);outline-offset:4px}
+.thumb{
+  position:relative;aspect-ratio:4/3;background:var(--card);
+  border:1px solid var(--rule);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.card:hover .thumb{border-color:var(--ink)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .ph{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;
+  color:#A9A79E;text-transform:uppercase;text-align:center;padding:10px;
+}
+.thumb .sku{
+  position:absolute;left:0;top:0;background:var(--ink);color:var(--paper);
+  font-family:"IBM Plex Mono",monospace;font-size:10px;padding:3px 7px;letter-spacing:.06em;
+}
+.thumb .qty{
+  position:absolute;right:0;top:0;background:var(--blue);color:#fff;
+  font-family:"IBM Plex Mono",monospace;font-size:10px;padding:3px 7px;letter-spacing:.06em;
+}
+.card .name{
+  font-size:14.5px;font-weight:500;margin:9px 0 3px;line-height:1.25;
+}
+.card .dims{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--soft);letter-spacing:.02em}
+.scale{display:block;margin-top:8px;width:100%;height:16px}
+.inreq{
+  margin-top:7px;font-family:"IBM Plex Mono",monospace;font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--blue);
+}
+.card .rate{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;margin-top:4px;font-weight:600;
+}
+.card .rate span{color:var(--soft);font-weight:400;font-size:10.5px}
+.quote{border-top:1px solid var(--ink);margin-top:4px;padding:12px 0 4px}
+.quote div{display:flex;justify-content:space-between;gap:12px;padding:3px 0;
+  font-family:"IBM Plex Mono",monospace;font-size:12px}
+.quote div.big{font-size:15px;font-weight:600;border-top:1px solid var(--rule);margin-top:6px;padding-top:8px}
+.quote div span:first-child{color:var(--soft)}
+.quote div.big span:first-child{color:var(--ink)}
+.quote .hint{display:block;color:var(--soft);font-size:10.5px;padding-top:8px;line-height:1.55}
+.drawerterms{border-top:1px solid var(--rule);padding:14px 0 18px}
+.drawerterms h4{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;margin:0 0 6px;color:var(--ink)}
+.drawerterms p{margin:0;font-size:12px;line-height:1.6;color:var(--soft)}
+.line .lr{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--soft);margin-top:3px}
+.todo{
+  margin-top:6px;font-family:"IBM Plex Mono",monospace;font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink);
+  border:1px dashed var(--rule);display:inline-block;padding:2px 6px;margin-right:5px;
+}
+.thumb .shots{
+  position:absolute;left:0;bottom:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Mono",monospace;font-size:9.5px;padding:2px 6px;letter-spacing:.06em;
+  border-top:1px solid var(--rule);border-right:1px solid var(--rule);
+}
+.strip{display:flex;gap:6px;padding:8px;border-top:1px solid var(--rule);background:var(--card);flex-wrap:wrap}
+.strip button{width:52px;height:52px;border:1px solid var(--rule);background:none;padding:0;overflow:hidden}
+.strip button[aria-pressed="true"]{border-color:var(--blue);border-width:2px}
+.strip img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---------- empty ---------- */
+.empty{padding:70px 0 100px;max-width:520px}
+.empty h3{font-family:"Archivo",sans-serif;font-variation-settings:"wdth" 115;text-transform:uppercase;font-size:22px;margin:0 0 8px}
+.empty p{color:var(--soft);margin:0 0 14px}
+
+/* ---------- modal ---------- */
+.scrim{
+  position:fixed;inset:0;background:rgba(23,24,26,.55);z-index:60;
+  display:flex;align-items:center;justify-content:center;padding:22px;
+}
+.sheet{
+  background:var(--paper);border:1px solid var(--ink);max-width:900px;width:100%;
+  max-height:88vh;overflow:auto;
+}
+.sheet .hd{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--paper)}
+.sheet .hd .t{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase}
+.x{background:none;border:0;font-size:20px;line-height:1;padding:4px 6px}
+.detail{display:grid;grid-template-columns:1.1fr 1fr;gap:0}
+.detail .picwrap{border-right:1px solid var(--rule);display:flex;flex-direction:column}
+.detail .pic{background:var(--card);flex:1;min-height:330px;display:flex;align-items:center;justify-content:center}
+.detail .pic img{width:100%;height:100%;max-height:520px;object-fit:contain}
+.detail .pic .ph{font-family:"IBM Plex Mono",monospace;font-size:11px;color:#A9A79E;letter-spacing:.1em;text-align:center;padding:20px}
+.detail .info{padding:22px 24px 26px}
+.detail h3{font-family:"Archivo",sans-serif;font-variation-settings:"wdth" 112;font-weight:700;font-size:26px;line-height:1.05;margin:6px 0 10px;text-transform:uppercase}
+.detail .desc{margin:0 0 18px}
+.dl{border-top:1px solid var(--rule);margin:0}
+.dl dt,.dl dd{margin:0}
+.dl div{display:flex;justify-content:space-between;gap:16px;padding:7px 0;border-bottom:1px solid var(--rule);font-family:"IBM Plex Mono",monospace;font-size:12px}
+.dl dt{color:var(--soft);text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+.addrow{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
+.stepper{display:flex;border:1px solid var(--ink)}
+.stepper button{background:none;border:0;padding:6px 12px;font-family:"IBM Plex Mono",monospace}
+.stepper button:hover{background:var(--ink);color:var(--paper)}
+.stepper span{padding:6px 10px;min-width:44px;text-align:center;font-family:"IBM Plex Mono",monospace;border-left:1px solid var(--ink);border-right:1px solid var(--ink)}
+.bigbtn{
+  background:var(--blue);color:#fff;border:1px solid var(--blue);padding:8px 18px;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.1em;
+}
+.bigbtn:hover{background:var(--ink);border-color:var(--ink)}
+.bigbtn.ghost{background:none;color:var(--ink);border-color:var(--ink)}
+.bigbtn.ghost:hover{background:var(--ink);color:var(--paper)}
+.bigbtn[disabled]{opacity:.4;pointer-events:none}
+
+/* ---------- request drawer ---------- */
+.drawer{
+  position:fixed;top:0;right:0;height:100%;width:min(460px,100%);
+  background:var(--paper);border-left:1px solid var(--ink);z-index:70;
+  display:flex;flex-direction:column;
+}
+.drawer .hd{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--ink)}
+.drawer .body{flex:1;overflow:auto;padding:0 18px}
+.drawer .ft{border-top:1px solid var(--ink);padding:14px 18px;display:flex;gap:10px;flex-wrap:wrap}
+.line{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--rule);align-items:flex-start}
+.line .lt{width:56px;height:56px;flex:none;background:var(--card);border:1px solid var(--rule);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.line .lt img{width:100%;height:100%;object-fit:cover}
+.line .lt span{font-family:"IBM Plex Mono",monospace;font-size:9px;color:#A9A79E}
+.line .lb{flex:1;min-width:0}
+.line .lb .n{font-size:13.5px;font-weight:500;line-height:1.2}
+.line .lb .m{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--soft);margin-top:3px}
+.line .lq{display:flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+.line .lq button{background:none;border:1px solid var(--rule);width:22px;height:22px;line-height:1;padding:0}
+.line .lq button:hover{border-color:var(--ink)}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 0}
+.fields label{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft);margin-bottom:4px}
+.fields input,.fields textarea{width:100%;background:var(--card);border:1px solid var(--rule);padding:7px 9px;font-size:13px}
+.fields .full{grid-column:1/-1}
+.fields .grouphd{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink);border-bottom:1px solid var(--ink);
+  padding-bottom:4px;margin-top:8px;
+}
+.fields .grouphd:first-child{margin-top:0}
+.fields .same{
+  display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--soft);
+  font-family:"Instrument Sans",sans-serif;text-transform:none;letter-spacing:0;margin-bottom:0;
+}
+.fields .same input{width:auto}
+.drawer .ft{border-top:1px solid var(--ink);padding:14px 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fields input:focus,.fields textarea:focus{outline:none;border-color:var(--blue)}
+
+/* ---------- settings ---------- */
+.panel{padding:20px 22px 26px;max-width:760px}
+.panel h4{font-family:"Archivo",sans-serif;font-variation-settings:"wdth" 112;text-transform:uppercase;font-size:15px;margin:22px 0 6px}
+.panel h4:first-child{margin-top:0}
+.panel p{color:var(--soft);font-size:13.5px;margin:0 0 10px}
+.panel code{font-family:"IBM Plex Mono",monospace;font-size:12px;background:var(--card);border:1px solid var(--rule);padding:1px 5px}
+.bandgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+.pricegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.bandgrid label,.pricegrid label{display:block;font-family:"IBM Plex Mono",monospace;font-size:9.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--soft);margin-bottom:4px}
+.bandgrid label em{font-style:normal;opacity:.65}
+.bandgrid input,.pricegrid input{width:100%;background:var(--card);border:1px solid var(--rule);
+  padding:7px 8px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+.bandgrid input:focus,.pricegrid input:focus{outline:none;border-color:var(--blue)}
+@media (max-width:620px){.bandgrid{grid-template-columns:repeat(3,1fr)}.pricegrid{grid-template-columns:repeat(2,1fr)}}
+.panel input[type=text]{width:100%;background:var(--card);border:1px solid var(--rule);padding:8px 10px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+.panel textarea{width:100%;height:120px;background:var(--card);border:1px solid var(--rule);padding:8px 10px;font-family:"IBM Plex Mono",monospace;font-size:11.5px}
+.filebtn{display:inline-block;border:1px solid var(--ink);padding:7px 14px;font-family:"IBM Plex Mono",monospace;font-size:11px;text-transform:uppercase;letter-spacing:.1em;cursor:pointer}
+.filebtn:hover{background:var(--ink);color:var(--paper)}
+.filebtn input{display:none}
+.note{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--blue);margin-top:8px}
+.rowbtns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+
+footer{border-top:1px solid var(--rule);margin-top:40px;padding:26px 0 60px}
+footer .terms{max-width:620px;padding-bottom:22px}
+footer .terms h3{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink);margin:0 0 7px;
+}
+footer .terms p{margin:0;font-size:13.5px;line-height:1.6;color:var(--soft)}
+footer .footrow{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--soft);
+  letter-spacing:.06em;text-transform:uppercase;border-top:1px solid var(--rule);padding-top:16px}
+
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);padding:9px 16px;z-index:90;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+}
+
+@media (max-width:720px){
+  .detail{grid-template-columns:1fr}
+  .detail .picwrap{border-right:0;border-bottom:1px solid var(--rule)}
+  .detail .pic{min-height:240px}
+  .masthead{padding:28px 0 18px}
+  .controls{position:static}
+}
+@media (prefers-reduced-motion:no-preference){
+  .card .thumb,.chip,.topbtn{transition:border-color .15s ease,background .15s ease,color .15s ease}
+}
+@media print{
+  .topbar,.controls,.masthead,.grid,.sectionhead,footer,.scrim{display:none!important}
+  .drawer{position:static;width:100%;border:0}
+  .drawer .ft,.drawer .hd .x{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">Magnets Studio <span>/ Prop House · Ljubljana</span></div>
+    <div class="spacer"></div>
+    <button class="topbtn hidden" id="btnSettings">Catalogue + photos</button>
+    <button class="topbtn primary" id="btnReq">Request list <span class="count" id="reqCount">0</span></button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1>Prop&nbsp;house</h1>
+    <div class="sub">Search the shelves · sizes in centimetres · rental by request</div>
+    <div class="searchrow">
+      <div class="searchfield">
+        <input id="q" type="search" placeholder="glass jar, wooden, cutting board, 01.23…" autocomplete="off" aria-label="Search props">
+      </div>
+      <div class="tally" id="tally"></div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="wrap" id="controls"></div>
+</div>
+
+<main class="wrap" id="results"></main>
+
+<footer>
+  <div class="wrap">
+    <div class="terms">
+      <h3>Damage &amp; loss</h3>
+      <p id="damageTerms"></p>
+    </div>
+  </div>
+  <div class="wrap footrow">
+    <div>Magnets Studio — prop rental</div>
+    <div><span id="footcount"></span> · <button class="linkbtn" id="studioLink">Studio</button></div>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   CATALOGUE
+   Transcribed from the Google Sheet "Magnets Studio props".
+   sku  – code used to match the photo filename
+   src  – the exact row name in the sheet (kept for matching)
+   h/w/d – centimetres, null when the sheet leaves it blank
+   ============================================================ */
+const SEED = [
+{sku:"01.01",cat:"01",name:"Glass jar",src:"01.01_glass jar",h:28.5,w:10.5,d:null,qty:1,desc:"Tall glass jar with glass lid, empty",files:["01.01_glass jar.jpg"]},
+{sku:"01.02",cat:"01",name:"Glass jar",src:"01.02_glass jar",h:28.5,w:10.5,d:null,qty:1,desc:"Tall glass jar with wooden lid, wholegrain pasta",files:["01.02_glass jar.jpg"]},
+{sku:"01.03",cat:"01",name:"Glass jar",src:"01.03_glass jar",h:18.5,w:15.5,d:null,qty:1,desc:"Wide smooth glass cookie jar with lid",files:["01.03_glass jar.jpg"]},
+{sku:"01.04",cat:"01",name:"Glass jar",src:"01.04_glass jar",h:27,w:14.5,d:null,qty:1,desc:"Tall ribbed glass cookie jar with lid, biscuits",files:["01.04_glass jar.jpg"]},
+{sku:"01.05",cat:"01",name:"Glass jar",src:"01.05_glass jar",h:24,w:16.5,d:null,qty:1,desc:"Wide ribbed glass cookie jar with lid, round cookies",files:["01.05_glass jar.jpg"]},
+{sku:"01.06",cat:"01",name:"Glass jar",src:"01.06_glass jar",h:19,w:14,d:null,qty:1,desc:"Narrow smooth glass cookie jar with lid, empty",files:["01.06_glass jar.jpg"]},
+{sku:"01.07",cat:"01",name:"Glass jar",src:"01.07_glass jar",h:17.5,w:11,d:null,qty:1,desc:"Glass jar with wooden lid, fusilli",files:["01.07_glass jar.jpg"]},
+{sku:"01.08",cat:"01",name:"Glass jar",src:"01.08_glass jar",h:14,w:8.5,d:null,qty:1,desc:"Tall narrow glass jar with lid, oats",files:["01.08_glass jar.jpg"]},
+{sku:"01.09",cat:"01",name:"Glass jar",src:"01.09_glass jar",h:15,w:10,d:null,qty:1,desc:"Square glass jar with lid, bay leaf",files:["01.09_glass jar.jpg"]},
+{sku:"01.10",cat:"01",name:"Glass jar",src:"01.10_glass jar",h:7.8,w:8,d:null,qty:1,desc:"Small glass jar with lid, spices",files:["01.10_glass jar.jpg"]},
+{sku:"01.11",cat:"01",name:"Glass jar",src:"01.11_glass jar",h:13.5,w:11,d:null,qty:1,desc:"Ribbed glass jar with wooden mushroom lid, spices",files:["01.11_glass jar.jpg"]},
+{sku:"01.12",cat:"01",name:"Glass jar",src:"01.12_glass jar",h:10,w:9,d:null,qty:1,desc:"Ribbed glass jar with wooden lid, spices",files:["01.12_glass jar.jpg"]},
+{sku:"01.13",cat:"01",name:"Glass jar",src:"01.13_glass jar",h:12.5,w:7,d:null,qty:1,desc:"Medium ribbed glass jar with glass lid, walnuts",files:["01.13_glass jar.jpg"]},
+{sku:"01.14",cat:"01",name:"Glass jar",src:"01.14_glass jar",h:15,w:8,d:null,qty:1,desc:"Small narrow glass cookie jar with glass lid, cookies",files:["01.14_glass jar.jpg"]},
+{sku:"01.15",cat:"01",name:"Glass jar",src:"01.15_glass jar",h:14,w:6.5,d:null,qty:2,desc:"Glass jar with cork lid, spices",files:["01.15_glass jar.JPG"]},
+{sku:"01.16",cat:"01",name:"Glass jar",src:"01.16_glass jar",h:12,w:6,d:null,qty:2,desc:"Glass jar with metal lid, pasta and chickpeas",files:["01.16glass jar.JPG"]},
+{sku:"01.17",cat:"01",name:"Glass jar",src:"01.17_glass jar",h:8.5,w:9,d:null,qty:1,desc:"Glass jar with red and white checkered lid, paprika",files:["01.17_glass jar.jpg"]},
+{sku:"01.18",cat:"01",name:"Glass jar",src:"01.18_glass jar",h:27.5,w:9.5,d:null,qty:1,desc:"Tall glass jar with cork lid, empty",files:["01.18_glass jar.jpg"]},
+{sku:"01.19",cat:"01",name:"Glass jar",src:"01.19_glass jar",h:13,w:7,d:null,qty:1,desc:"Small ribbed glass jar with glass lid, empty",files:["01.19_glass jar.jpg"]},
+{sku:"01.20",cat:"01",name:"Glass jar",src:"01.20_glass jar",h:8,w:5,d:null,qty:2,desc:"Tiny glass jars with cork lids, empty",files:["01.20_glass jar.JPG"]},
+{sku:"01.21",cat:"01",name:"Spice shakers",src:"01.21_spice shakers",h:10.5,w:5,d:null,qty:4,desc:"Glass jars with metal lids, spices",files:["01.21_spice shakers.jpg"]},
+{sku:"01.22",cat:"01",name:"Glass jar",src:"01.22_glass jar",h:12,w:7,d:null,qty:1,desc:"Glass jar with red checkered lid, empty",files:["01.22_glass jar.JPG"]},
+{sku:"01.23",cat:"01",name:"Coffee maker, moka pot",src:"01.23_coffee maker moka pot",h:20.5,w:19.5,d:11.5,qty:1,desc:"Metal coffee moka pot",files:["01.23_coffee maker moka pot.JPG"]},
+{sku:"01.24",cat:"01",name:"Cheese grater",src:"01.24_ceese grater",h:25,w:10.5,d:8.5,qty:1,desc:"Metal cheese grater",files:["01.24_cheese grater.JPG"]},
+{sku:"01.25",cat:"01",name:"Cheese grater",src:"01.25_cheese grater",h:22,w:11.5,d:9,qty:1,desc:"Metal cheese grater with white plastic handle",files:["01.25_cheese grater.JPG"]},
+{sku:"01.26",cat:"01",name:"Cheese grater",src:"01.26_cheese grater",h:20.5,w:9,d:6.5,qty:1,desc:"Metal cheese grater with mint green plastic handle",files:["01.26_cheese grater.JPG"]},
+{sku:"01.27",cat:"01",name:"Big pot",src:"01.27_big pot",h:24,w:37,d:null,qty:1,desc:"Big metal cooking pot with lid",files:["01.27_big pot.JPG"]},
+{sku:"01.28",cat:"01",name:"Pink hand mixer",src:"01.28_pink hand mixer",h:38,w:7,d:null,qty:1,desc:"Pink hand mixer",files:["01.28_pink hand mixer.JPG"]},
+{sku:"01.29",cat:"01",name:"Metal bowl",src:"01_29_metal bowl",h:14,w:28.5,d:null,qty:7,desc:"Metal mixing / serving bowl",files:["01.29_metal bowl.JPG"]},
+{sku:"01.30",cat:"01",name:"Electric kettle",src:"01.30_electric kettle",h:19,w:21.5,d:12.5,qty:1,desc:"Silver electric kettle",files:["01.30_electric kettle.JPG"]},
+{sku:"01.31",cat:"01",name:"Metal scoop",src:"01.31_metal scoop",h:8,w:31,d:11.5,qty:2,desc:"Metal scoop",files:["01.31_metal scoop.JPG"]},
+{sku:"01.32",cat:"01",name:"Plastic juicer",src:"01.32_plastic juicer",h:13,w:18.5,d:null,qty:1,desc:"White plastic citrus juicer",files:["01.32_plastic juicer.JPG"]},
+{sku:"01.33",cat:"01",name:"Cork trivet",src:"01.33_cork trivet",h:null,w:18,d:null,qty:2,desc:"Cork trivet for hot pots",files:["01.33_cork trivet.JPG"]},
+{sku:"01.34",cat:"01",name:"Funnel",src:"01.34_funnel",h:24,w:25,d:null,qty:1,desc:"Large white plastic kitchen funnel",files:["01.34_funnel.JPG"]},
+{sku:"01.35",cat:"01",name:"Cutting board stack",src:"01.35_cutting board stack",h:22.5,w:31.5,d:null,qty:3,qtyNote:"set of 3",desc:"Three plastic cutting boards — white, grey and blue",files:["01.35_cutting bard stack.JPG"]},
+{sku:"01.36",cat:"01",name:"Blue plastic cutting board",src:"01.36_blue plastic cutting board",h:null,w:40,d:30,qty:1,desc:"Large blue plastic cutting board",files:["01.36_blue plastic cutting board.JPG"]},
+{sku:"01.37",cat:"01",name:"Wooden cutting board",src:"01.37_wooden cutting board",h:null,w:45,d:28,qty:1,desc:"Large light wooden cutting board",files:["01.37_wooden cutting bard.JPG"]},
+{sku:"01.38",cat:"01",name:"Blue plastic cutting board",src:"01.38_blue plastic cutting board",h:null,w:53,d:33,qty:1,desc:"Blue plastic cutting board with border divot",files:["01.38_blue plastic cutting board.JPG"]},
+{sku:"01.39",cat:"01",name:"White plastic cutting board",src:"01.39_white plastic cutting bard",h:null,w:60,d:40,qty:1,desc:"Large white plastic cutting board",files:["01.39_white plastic cutting board.JPG"]},
+{sku:"01.40",cat:"01",name:"Wooden cutting board",src:"01.40_wooden cutting board",h:null,w:38,d:19.5,qty:1,desc:"Wooden cutting board with handle",files:["01.40_wooden cutting board.JPG"]},
+{sku:"01.41",cat:"01",name:"Wooden cutting board",src:"01.41_wooden cutting board",h:null,w:28,d:20.5,qty:1,desc:"Light wooden cutting board",files:["01.41_wooden cutting board.JPG"]},
+{sku:"01.42",cat:"01",name:"Wooden cutting board",src:"01.42_wooden cutting board",h:null,w:25,d:null,qty:1,desc:"Light wooden round cutting board",files:["01.42_wooden cutting board.JPG"]},
+{sku:"01.43",cat:"01",name:"Wooden cutting board",src:"01.43_wooden cutting board",h:null,w:29.5,d:null,qty:1,desc:"Round pizza wooden cutting board",files:["01.43_wooden cutting board.JPG"]},
+{sku:"01.44",cat:"01",name:"Wooden cutting board",src:"01.44_wooden cutting board",h:null,w:52,d:21.5,qty:1,desc:"Long oval wooden cutting board",files:["01.44_wooden cutting board.JPG"]},
+{sku:"01.45",cat:"01",name:"Wooden cutting board",src:"01.45_wooden cutting board",h:null,w:70,d:21,qty:1,desc:"Large wooden cutting board with handle",files:["01.45wooden cutting board.JPG"]},
+{sku:"01.46",cat:"01",name:"Wooden cutting board",src:"01.46_wooden cutting board",h:null,w:83,d:31,qty:1,desc:"Large walnut cutting board with two handles",files:["01.46wooden cutting board.JPG"]},
+{sku:"01.47",cat:"01",name:"Wooden spoons",src:"01.47_wooden spoons",h:null,w:30,d:null,qty:4,desc:"Light wooden spoons",files:["01.47_wooden spoons.JPG"]},
+{sku:"01.48",cat:"01",name:"Wooden spoons",src:"01.48_wooden spoons",h:null,w:29,d:null,qty:2,desc:"Dark wooden spoons",files:["01.48_wooden spoons.JPG"]},
+{sku:"01.49",cat:"01",name:"Zester",src:"01.49_zester",h:null,w:32,d:null,qty:1,desc:"Metal zester with wooden handle",files:["01.49_zester.JPG"]},
+{sku:"01.50",cat:"01",name:"Ladle",src:"01.50_ladle",h:null,w:29,d:null,qty:1,desc:"Metal soup ladle",files:["01.50_ladle.JPG"]},
+{sku:"01.51",cat:"01",name:"Ice cream scoops",src:"01.51_ice cream scoops",h:null,w:23,d:null,qty:2,desc:"Metal ice cream scoops — one all metal, one with blue plastic handle",files:["01.51_icecream scoops.JPG"]},
+{sku:"01.52",cat:"01",name:"Plastic spatula",src:"01.52_plastic spatula",h:null,w:30,d:null,qty:1,desc:"Red plastic spatula",files:["01.52_plastic spatula.JPG"]},
+{sku:"01.53",cat:"01",name:"Grill spatula, tongs and knife",src:"01.53_grill spatula, tongs and knife",h:null,w:42,d:null,qty:2,desc:"Metal spatula, tongs and knife with wooden handles",files:["01.53_grill spatula, tongs and knife.JPG"]},
+{sku:"01.54",cat:"01",name:"Plastic spatula",src:"01.54_plastic spatula",h:null,w:23,d:null,qty:1,desc:"White plastic spatula",files:["01.54_plastic spatula.JPG"]},
+{sku:"01.55",cat:"01",name:"Kitchen knife",src:"01.55_kitchen knife",h:null,w:27,d:null,qty:1,desc:"Knife with black plastic handle",files:["01.55_kitchen knife.JPG"]},
+{sku:"01.56",cat:"01",name:"Kitchen knife",src:"01.56_kitchen knife",h:null,w:33,d:null,qty:1,desc:"Knife with wooden handle",files:["01.56_kitchen knife.JPG"]},
+{sku:"01.57",cat:"01",name:"Kitchen knife",src:"01.57_kitchen knife",h:null,w:17,d:null,qty:1,desc:"Small knife with black plastic handle",files:["01.57_kitchen knife.JPG"]},
+{sku:"01.58",cat:"01",name:"Cocktail spoon",src:"01.58_cocktail spoon",h:null,w:28,d:null,qty:1,desc:"Long metal spoon for mixing cocktails",files:["01.58_cocktail spoon.JPG"]},
+{sku:"01.59",cat:"01",name:"Cocktail sieve",src:"01.59_coctail sieve",h:null,w:15,d:null,qty:1,desc:"Sieve for cocktails",files:["01.59_coctail sieve.JPG"]},
+{sku:"01.60",cat:"01",name:"Cocktail whisk",src:"01.60_cocktail whisk",h:null,w:29,d:null,qty:1,desc:"Metal whisk for cocktails",files:["01.60_coctail whisk.JPG"]},
+{sku:"01.61",cat:"01",name:"Plastic brush",src:"01.61_plastic brush",h:null,w:27,d:null,qty:2,desc:"Plastic cooking brushes — one black, one grey and blue",files:["01.61_plastic brush.JPG"]},
+{sku:"01.62",cat:"01",name:"Kitchen tweezers",src:"01.62_kitchen tweezers",h:null,w:30,d:null,qty:3,desc:"Metal kitchen tweezers — two long, one shorter",files:["01.62_kitchen tweezers.JPG"]},
+{sku:"01.63",cat:"01",name:"Metal tongs",src:"01.63_metal tongs",h:null,w:12.5,d:null,qty:1,desc:"Small metal tongs",files:["01.63_metal tongs.JPG"]},
+{sku:"01.64",cat:"01",name:"Cheese trier",src:"01.64_cheese trier",h:null,w:24,d:null,qty:1,desc:"Metal tools in a leather bag",files:["01.64_cheese trier 01.JPG", "01.64_cheese trier 02.JPG"]},
+{sku:"01.65",cat:"01",name:"Cheese forks",src:"01.65_cheese forks",h:null,w:14.5,d:null,qty:1,desc:"Metal fork and knife for cheese tasting, wooden handles",files:["01.65_cheese forks.JPG"]},
+{sku:"01.66",cat:"01",name:"Cheese knife",src:"01.66_cheese knife",h:null,w:21.5,d:null,qty:1,desc:"Metal cheese tasting knife",files:["01.66_cheese knife.JPG"]},
+{sku:"01.67",cat:"01",name:"Prosciutto needle",src:"01.67_prosciutto needle",h:null,w:17,d:null,qty:1,desc:"Wooden needle for testing prosciutto",files:["01.67_prosciutto needle.JPG"]},
+{sku:"01.68",cat:"01",name:"Food thermometer",src:"01.68_food thermometor",h:null,w:14.5,d:4.5,qty:1,desc:"Black round thermometer with metal needle",files:["01.68_food thermometor.JPG"]},
+{sku:"01.69",cat:"01",name:"Heat glove",src:"01.69_heat glove",h:null,w:31,d:16,qty:1,desc:"Beige heat glove",files:["01.69_heat glove.JPG"]},
+{sku:"01.70",cat:"01",name:"Apron",src:"01.70_apron",h:null,w:null,d:null,qty:1,desc:"Red apron with patterns",files:["01.70_apron.JPG"]},
+{sku:"01.71",cat:"01",name:"Apron",src:"01.71_apron",h:null,w:null,d:null,qty:1,desc:"Green apron with cherry pattern",files:[]},
+{sku:"01.72",cat:"01",name:"Metal plate stand",src:"01.72_metal plate stand",h:16,w:33,d:11.5,qty:1,desc:"Metal stand for draining washed plates",files:["01.72_apron.JPG", "01.72_metal plate stand.JPG"]},
+{sku:"01.73",cat:"01",name:"Scale",src:"01.73_scale",h:25.5,w:21,d:21,qty:1,desc:"Metal kitchen scale with black face",files:["01.73_scale.JPG"]},
+{sku:"01.74",cat:"01",name:"Knife holder",src:"01.74_knife holder",h:22,w:9,d:18,qty:1,desc:"Metal knife stand",files:["01.74_knife holder.JPG"]},
+{sku:"01.75",cat:"01",name:"Scale",src:"01.75_scale",h:12,w:34,d:33,qty:1,desc:"Metal electric kitchen scale with black and blue face",files:["01.75_scale.JPG"]},
+{sku:"01.76",cat:"01",name:"Infrared cooking plate",src:"01.76_infrared cooking plate",h:7,w:28,d:28,qty:1,desc:"Black single electric infrared cooking plate",files:["01.76_infrared cooking plate.JPG"]},
+{sku:"01.77",cat:"01",name:"Induction cooking plate",src:"01.77_induction cooking plate",h:4,w:37,d:27,qty:1,desc:"Black single electric induction cooking plate",files:["01.77_induction cooking plate.JPG"]},
+
+{sku:"02.01",cat:"02",name:"Metal basket",src:"02.01_metal basket",h:27.5,w:21,d:15,qty:1,desc:"Metal basket with handles",files:["02.01_metal basket.JPG"]},
+{sku:"02.02",cat:"02",name:"Black metal basket",src:"02.02_black metal basket",h:8.5,w:15,d:null,qty:4,desc:"Round black metal baskets",files:["02.02_black metal basket.JPG"]},
+{sku:"02.03",cat:"02",name:"Metal cup",src:"02.03_metal cup",h:11,w:12,d:8.5,qty:1,desc:"Metal cup for foaming milk",files:["02.03_metal cup.JPG"]},
+{sku:"02.04",cat:"02",name:"Glass sugar holder",src:"02.04_glass sugar holder",h:16,w:8,d:null,qty:2,desc:"Glass sugar holder with metal top",files:["02.04_glass sugar holder.JPG"]},
+{sku:"02.05",cat:"02",name:"Wooden pepper grinder",src:"02.05_wooden pepper grinder",h:14,w:5,d:null,qty:10,desc:"Wooden pepper grinder",files:["02.05_wooden pepper grinder.JPG"]},
+{sku:"02.06",cat:"02",name:"Glass salt and pepper shaker",src:"02.06_ glass salt pepper shaker",h:10,w:4,d:null,qty:6,qtyNote:"3 pairs",desc:"Glass salt / pepper shaker with metal top",files:["02.06_glass salt pepper shaker.JPG"]},
+{sku:"02.07",cat:"02",name:"Metal measuring glass",src:"02.07_metal measuring glass",h:7.5,w:4,d:null,qty:1,desc:"Metal measuring glass for drinks",files:["02.07_metal measuring glass.JPG"]},
+{sku:"02.08",cat:"02",name:"Ketchup and mayo bottles",src:"02.08_ketchup and mayo plastic bottles",h:22,w:5.5,d:null,qty:7,qtyNote:"3 red, 4 yellow",desc:"Red ketchup and yellow mayo squeeze bottles",files:["02.08_ketchup and mayo plastic bottles.JPG"]},
+{sku:"02.09",cat:"02",name:"Wooden box with handle",src:"02.09_wooden box with handle",h:19,w:19,d:16,qty:2,desc:"Wooden box with a handle, for condiments",files:["02.09_wooden boy with handle.JPG"]},
+{sku:"02.10",cat:"02",name:"Condiment stand",src:"02.10_condiment stand",h:24,w:13.5,d:13.5,qty:5,desc:"Wooden condiment stand with black metal handle. Salt and pepper shaker plus oil and vinegar bottles",files:["02.10_condiment stand.JPG"]},
+{sku:"02.11",cat:"02",name:"Condiment stand",src:"02.11_condiment stand",h:17,w:15,d:6.5,qty:3,desc:"Metal condiment stand with two glass bottles for oil and vinegar",files:["02.11_condiment stand.JPG"]},
+{sku:"02.12",cat:"02",name:"Plastic oil bottle",src:"02.12_plastic oil bottle",h:18.5,w:5,d:null,qty:2,desc:"White plastic oil dispenser bottle",files:["02.12_plastic oil bottle.JPG"]},
+{sku:"02.13",cat:"02",name:"Wooden menu stand",src:"02.13_wooden menu stand",h:4.5,w:10,d:6,qty:8,desc:"Wooden menu stand",files:["02.13_wooden menu stand.JPG"]},
+{sku:"02.14",cat:"02",name:"Napkin dispenser",src:"02.14_napking dispenser",h:16,w:12.5,d:9.5,qty:3,desc:"White plastic napkin dispenser",files:["02.14_napkin dispenser.JPG"]},
+{sku:"02.15",cat:"02",name:"Black menu",src:"02.15_black menu",h:null,w:23.5,d:16.5,qty:5,desc:"Black menu book with gold corners",files:["02.15_black menu.JPG"]},
+{sku:"02.16",cat:"02",name:"Red menu",src:"02.16_red menu",h:null,w:31,d:23,qty:3,desc:"Red menu book with gold corners",files:["02.16_red menu.JPG"]},
+{sku:"02.17",cat:"02",name:"Black bill folder",src:"02.17_black bill folder",h:null,w:23,d:13,qty:1,desc:"Black folder",files:["02.17_black bill folder 01.JPG", "02.17_black bill folder 02.JPG"]},
+
+{sku:"02.18",cat:"02",name:"Fake wood tray",src:"02.18_fake wood tray",h:null,w:null,d:null,qty:1,desc:"",files:["02.18_fake wood tray.JPG"]},
+{sku:"02.19",cat:"02",name:"Fake wood tray",src:"02.19_fake wood tray",h:null,w:null,d:null,qty:1,desc:"",files:["02.19_fake wood tray.JPG"]},
+{sku:"02.20",cat:"02",name:"Gold ice bucket",src:"02.20_gold ice bucket",h:null,w:null,d:null,qty:1,desc:"",files:["02.20_gold ice bucket.JPG"]},
+{sku:"02.21",cat:"02",name:"Prosciutto stand",src:"02.21_prosciutto stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.21_prosciutto stand.JPG"]},
+{sku:"02.22",cat:"02",name:"Prosciutto stand",src:"02.22_prosciutto stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.22_prosciutto stand.JPG"]},
+{sku:"02.23",cat:"02",name:"Prosciutto stand",src:"02.23_prosciutto stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.23_prosciutto stand.JPG"]},
+{sku:"02.24",cat:"02",name:"Cloche",src:"02.24_cloche",h:null,w:null,d:null,qty:1,desc:"",files:["02.24_cloche.JPG"]},
+{sku:"02.25",cat:"02",name:"Cloche",src:"02.25_cloche",h:null,w:null,d:null,qty:1,desc:"",files:["02.25_cloche.JPG"]},
+{sku:"02.26",cat:"02",name:"Cloche tops",src:"02.26_cloche tops",h:null,w:null,d:null,qty:1,desc:"",files:["02.26_cloche tops.JPG"]},
+{sku:"02.27",cat:"02",name:"Fake wood tray",src:"02.27_fake wood tray",h:null,w:null,d:null,qty:1,desc:"",files:["02.27_fake wood tray.JPG"]},
+{sku:"02.28",cat:"02",name:"Napkin holder",src:"02.28_napkin holder",h:null,w:null,d:null,qty:1,desc:"",files:["02.28_napkin holder.JPG"]},
+{sku:"02.29",cat:"02",name:"Little blackboard",src:"02.29_little blackboard",h:null,w:null,d:null,qty:1,desc:"",files:["02.29_little blackboard.JPG"]},
+{sku:"02.30",cat:"02",name:"Gold cake stand",src:"02.30_gold cake stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.30_gold cake stand.JPG"]},
+{sku:"02.31",cat:"02",name:"Glass cake stand",src:"02.31_glass cake stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.31_glass cake stand.JPG"]},
+{sku:"02.32",cat:"02",name:"Glass cake stand",src:"02.32_glass cake stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.32_glass cake stand.JPG"]},
+{sku:"02.33",cat:"02",name:"Glass cake stand",src:"02.33_glass cake stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.33_glass cake stand.JPG"]},
+{sku:"02.34",cat:"02",name:"Silver cake stand",src:"02.34_silver cake stand",h:null,w:null,d:null,qty:1,desc:"",files:["02.34_silver cake stand.JPG"]},
+{sku:"03.01",cat:"03",name:"Silver tray",src:"03.01_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.01_silver tray.JPG"]},
+{sku:"03.02",cat:"03",name:"Silver tray",src:"03.02_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.02_silver tray.JPG"]},
+{sku:"03.03",cat:"03",name:"Silver tray",src:"03.03_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.03_silver tray.JPG"]},
+{sku:"03.04",cat:"03",name:"Silver tray",src:"03.04_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.04_silver tray.JPG"]},
+{sku:"03.05",cat:"03",name:"Silver tray",src:"03.05_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.05_silver tray.JPG"]},
+{sku:"03.06",cat:"03",name:"Silver tray",src:"03.06_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.06_silver tray.JPG"]},
+{sku:"03.07",cat:"03",name:"Silver tray",src:"03.07_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.07_silver tray.JPG"]},
+{sku:"03.08",cat:"03",name:"Silver tray",src:"03.08_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.08_silver tray.JPG"]},
+{sku:"03.09",cat:"03",name:"Silver tray",src:"03.09_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.09_silver tray.JPG"]},
+{sku:"03.10",cat:"03",name:"Silver tray",src:"03.10_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.10_silver tray.JPG"]},
+{sku:"03.11",cat:"03",name:"Silver tray",src:"03.11_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.11_silver tray.JPG"]},
+{sku:"03.12",cat:"03",name:"Silver tray",src:"03.12_silver tray",h:null,w:null,d:null,qty:1,desc:"",files:["03.12_silver tray.JPG"]}
+];
+
+let CATS = {"01":"Kitchen","02":"Restaurant","03":"Dining room"};
+var FOLDERS = {"01": "01 - Kitchen", "02": "02 - Restaurant", "03": "03 - Dining room"};
+
+/* ============================================================
+   STATE + STORAGE
+   ============================================================ */
+const store = {
+  async get(k){
+    try{
+      if(window.storage && window.storage.get){const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null;}
+      const v = localStorage.getItem(k); return v ? JSON.parse(v) : null;
+    }catch(e){ return null; }
+  },
+  async set(k,v){
+    try{
+      if(window.storage && window.storage.set){ await window.storage.set(k, JSON.stringify(v)); return; }
+      localStorage.setItem(k, JSON.stringify(v));
+    }catch(e){}
+  }
+};
+
+let items = SEED.slice();
+let imgMap = {};            // sku -> [object URLs] from a picked folder
+let imgBase = "";           // optional public base URL for photos
+let useFolders = true;      // photos sit in "01 - Kitchen" style subfolders
+let manifestMode = false;   // files came from prep_props.py, so thumb/ and web/ exist
+let req = {};               // sku -> count
+let meta = {production:"",project:"",out:"",outTime:"",back:"",backTime:"",
+            contact:"",email:"",phone:"",sameBill:true,billTo:"",vat:"",po:"",
+            address:"",notes:""};
+
+const state = { q:"", cat:"all", material:"all", maxH:null, minQty:1, sort:"sku", gap:"all" };
+
+/* a prop is incomplete if the sheet has no measurements or description for it,
+   or if no photo file carries its number */
+const needsSpecs = it => !it.desc && it.h==null && it.w==null && it.d==null;
+const needsPhoto = it => !(it.files && it.files.length) && !(imgMap[it.sku]||[]).length;
+
+const MATERIALS = [
+  ["glass",/glass/i],["wood",/wood|cork|walnut/i],["metal",/metal|steel/i],
+  ["plastic",/plastic/i],["fabric",/apron|glove|cloth|leather/i],["electric",/electric|induction|infrared|mixer|kettle/i]
+];
+function materialsOf(it){
+  const hay = (it.name+" "+it.desc).toLowerCase();
+  return MATERIALS.filter(([n,re])=>re.test(hay)).map(([n])=>n);
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const el = (t,c,h)=>{const n=document.createElement(t); if(c)n.className=c; if(h!==undefined)n.innerHTML=h; return n;};
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num = v => (v===null||v===undefined||v==="") ? null : (isNaN(parseFloat(v)) ? null : parseFloat(v));
+
+function dimsLine(it){
+  const p=[];
+  if(it.h!=null)p.push("H "+it.h);
+  if(it.w!=null)p.push("W "+it.w);
+  if(it.d!=null)p.push("D "+it.d);
+  return p.length ? p.join(" × ")+" cm" : "no size recorded";
+}
+function longest(it){ return Math.max(it.h||0,it.w||0,it.d||0); }
+
+/* photo lookup.
+   Three ways a photo can arrive, in order of precedence:
+     1. a folder the person picked on their own machine (object URLs)
+     2. prepared files from prep_props.py — thumb/ and web/ copies, paths in manifest.json
+     3. the original Dropbox names sitting flat in category subfolders          */
+function urlFor(it, i, size){
+  const files = it.files || [];
+  if(!files[i]) return null;
+  const b = imgBase ? (imgBase.endsWith("/") ? imgBase : imgBase+"/") : "";
+  if(manifestMode){
+    return b + size + "/" + files[i].split("/").map(encodeURIComponent).join("/");
+  }
+  if(!imgBase) return null;
+  const sub = (useFolders && FOLDERS[it.cat]) ? encodeURIComponent(FOLDERS[it.cat])+"/" : "";
+  return b + sub + encodeURIComponent(files[i]);
+}
+function photosFor(it, size){
+  const picked = imgMap[it.sku];
+  if(picked && picked.length) return picked;
+  return (it.files||[]).map((f,i)=> urlFor(it,i,size||"thumb")).filter(Boolean);
+}
+function photoFor(it){ const p = photosFor(it); return p.length ? p[0] : null; }
+function skuFromFilename(fn){
+  const base = fn.split("/").pop();
+  const m = base.match(/^(\d{2})[._\-\s]?(\d{2})/);
+  return m ? m[1]+"."+m[2] : null;
+}
+
+/* the scale rule: a 100 cm frame with the prop's footprint drawn to size */
+function scaleSVG(it){
+  const L=100, W=it.w||it.h||0, H=it.h||it.d||0;
+  if(!W && !H) return '<svg class="scale" viewBox="0 0 200 16"></svg>';
+  const bw = Math.min(W,L)/L*200, bh = Math.max(2,Math.min(H,40)/40*12);
+  const over = (W>L);
+  return `<svg class="scale" viewBox="0 0 200 16" aria-hidden="true">
+    <line x1="0" y1="15" x2="200" y2="15" stroke="var(--rule)" stroke-width="1"/>
+    ${[0,50,100,150,200].map(x=>`<line x1="${x}" y1="11" x2="${x}" y2="15" stroke="var(--rule)" stroke-width="1"/>`).join("")}
+    <rect x="0" y="${15-bh}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${over?'var(--ink)':'var(--blue)'}" opacity=".85"/>
+  </svg>`;
+}
+
+function toast(msg){
+  const t = el("div","toast",esc(msg));
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),1900);
+}
+
+/* ============================================================
+   FILTER + RENDER
+   ============================================================ */
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  const terms = q ? q.split(/\s+/) : [];
+  return items.filter(it=>{
+    if(state.cat!=="all" && it.cat!==state.cat) return false;
+    if(state.gap==="specs" && !needsSpecs(it)) return false;
+    if(state.gap==="photo" && !needsPhoto(it)) return false;
+    if(state.gap==="ready" && (needsSpecs(it)||needsPhoto(it))) return false;
+    if(state.material!=="all" && !materialsOf(it).includes(state.material)) return false;
+    if(state.maxH && longest(it) > state.maxH) return false;
+    if(state.minQty>1 && (it.qty||1) < state.minQty) return false;
+    if(terms.length){
+      const hay = (it.sku+" "+it.name+" "+it.desc+" "+(CATS[it.cat]||"")+" "+materialsOf(it).join(" ")).toLowerCase();
+      return terms.every(t=>hay.includes(t));
+    }
+    return true;
+  }).sort((a,b)=>{
+    if(state.sort==="sku") return a.sku.localeCompare(b.sku);
+    if(state.sort==="name") return a.name.localeCompare(b.name);
+    if(state.sort==="big") return longest(b)-longest(a);
+    if(state.sort==="small") return (longest(a)||999)-(longest(b)||999);
+    if(state.sort==="qty") return (b.qty||1)-(a.qty||1);
+    return 0;
+  });
+}
+
+function renderControls(){
+  const c = document.getElementById("controls");
+  c.innerHTML = "";
+  const counts = {};
+  items.forEach(i=>counts[i.cat]=(counts[i.cat]||0)+1);
+
+  const mk=(label,val,key,n)=>{
+    const b=el("button","chip",esc(label)+(n!==undefined?`<span class="n">${n}</span>`:""));
+    b.setAttribute("aria-pressed", state[key]===val);
+    b.onclick=()=>{state[key]=val; render();};
+    return b;
+  };
+  c.appendChild(mk("All shelves","all","cat",items.length));
+  Object.keys(CATS).sort().forEach(k=> c.appendChild(mk(CATS[k],k,"cat",counts[k]||0)));
+
+  c.appendChild(el("div","divider"));
+  const matSel = el("div","ctrl");
+  matSel.innerHTML = "<span>Material</span>";
+  const sel = el("select");
+  ["all",...MATERIALS.map(m=>m[0])].forEach(m=>{
+    const o=el("option",null,m==="all"?"any":m); o.value=m; if(state.material===m)o.selected=true; sel.appendChild(o);
+  });
+  sel.onchange=()=>{state.material=sel.value; render();};
+  matSel.appendChild(sel);
+  c.appendChild(matSel);
+
+  const sizeC = el("div","ctrl");
+  sizeC.innerHTML = `<span>Fits under</span>`;
+  const r = el("input"); r.type="range"; r.min=5; r.max=100; r.step=5; r.value=state.maxH||100;
+  const lab = el("b",null,(state.maxH? state.maxH+" cm" : "any"));
+  r.oninput=()=>{ state.maxH = (+r.value>=100)?null:+r.value; lab.textContent = state.maxH? state.maxH+" cm":"any"; render(false); };
+  sizeC.appendChild(r); sizeC.appendChild(lab);
+  c.appendChild(sizeC);
+
+  const qC = el("div","ctrl");
+  qC.innerHTML = `<span>Sets only</span>`;
+  const qb = el("button","chip", state.minQty>1 ? "2+ in stock" : "off");
+  qb.setAttribute("aria-pressed", state.minQty>1);
+  qb.onclick=()=>{ state.minQty = state.minQty>1?1:2; render(); };
+  qC.appendChild(qb);
+  c.appendChild(qC);
+
+  c.appendChild(el("div","divider"));
+  const gC = el("div","ctrl");
+  gC.innerHTML = "<span>Show</span>";
+  const gs = el("select");
+  [["all","everything"],["ready","complete only"],["specs","missing sizes"],["photo","missing photo"]].forEach(([v,t])=>{
+    const o=el("option",null,t); o.value=v; if(state.gap===v)o.selected=true; gs.appendChild(o);
+  });
+  gs.onchange=()=>{state.gap=gs.value; render();};
+  gC.appendChild(gs);
+  c.appendChild(gC);
+
+  const sC = el("div","ctrl");
+  sC.innerHTML = "<span>Sort</span>";
+  const ss = el("select");
+  [["sku","catalogue no."],["name","name a–z"],["big","largest first"],["small","smallest first"],["qty","most in stock"]].forEach(([v,t])=>{
+    const o=el("option",null,t); o.value=v; if(state.sort===v)o.selected=true; ss.appendChild(o);
+  });
+  ss.onchange=()=>{state.sort=ss.value; render();};
+  sC.appendChild(ss);
+  c.appendChild(sC);
+
+  if(isAdmin){
+    const add = el("button","chip","+ new prop");
+    add.onclick = ()=> editProp(null);
+    c.appendChild(add);
+  }
+  if(state.q||state.cat!=="all"||state.material!=="all"||state.maxH||state.minQty>1||state.gap!=="all"){
+    const clr = el("button","linkbtn","Clear filters");
+    clr.onclick=()=>{ state.q=""; document.getElementById("q").value=""; state.cat="all"; state.material="all"; state.maxH=null; state.minQty=1; state.gap="all"; render(); };
+    c.appendChild(clr);
+  }
+}
+
+function cardFor(it){
+  const b = el("button","card");
+  b.type="button";
+  const shots = photosFor(it);
+  const src = shots[0] || null;
+  const inReq = req[it.sku]||0;
+  b.innerHTML = `
+    <div class="thumb">
+      <span class="sku">${esc(it.sku)}</span>
+      ${(it.qty||1)>1?`<span class="qty">×${it.qty}</span>`:""}
+      ${src?`<img loading="lazy" alt="${esc(it.name)}" src="${esc(src)}">`
+           :`<span class="ph">no photo linked<br>${esc(it.src)}</span>`}
+      ${shots.length>1?`<span class="shots">${shots.length} shots</span>`:""}
+    </div>
+    <div class="name">${esc(it.name)}</div>
+    <div class="dims">${esc(dimsLine(it))}</div>
+    ${pricing.show?`<div class="rate">${esc(money(priceOf(it)))} <span>/ week</span></div>`:""}
+    ${scaleSVG(it)}
+    ${needsSpecs(it)?`<div class="todo">needs measuring</div>`:""}
+    ${needsPhoto(it)?`<div class="todo">needs a photo</div>`:""}
+    ${inReq?`<div class="inreq">${inReq} on request list</div>`:""}`;
+  const img = b.querySelector("img");
+  if(img) img.onerror = ()=>{ img.replaceWith(Object.assign(document.createElement("span"),{className:"ph",textContent:"photo not found"})); };
+  b.onclick = ()=> openDetail(it);
+  return b;
+}
+
+function render(rebuildControls=true){
+  if(rebuildControls) renderControls();
+  const list = filtered();
+  const out = document.getElementById("results");
+  out.innerHTML = "";
+
+  const gaps = items.filter(i=>needsSpecs(i)||needsPhoto(i)).length;
+  document.getElementById("damageTerms").textContent = damageTerms();
+  document.getElementById("tally").innerHTML =
+    `<b>${list.length}</b> of ${items.length} props` + (gaps?` · ${gaps} still to finish`:"");
+  document.getElementById("footcount").textContent = items.length+" props catalogued";
+  document.getElementById("reqCount").textContent = Object.values(req).reduce((a,b)=>a+b,0);
+
+  if(!list.length){
+    const e = el("div","empty");
+    e.innerHTML = `<h3>Nothing on this shelf</h3>
+      <p>No prop matches that search. Try a material (“wood”), an object (“jar”), or a catalogue number like 01.23.</p>`;
+    const btn = el("button","bigbtn ghost","Clear filters");
+    btn.onclick=()=>{ state.q=""; document.getElementById("q").value=""; state.cat="all"; state.material="all"; state.maxH=null; state.minQty=1; render(); };
+    e.appendChild(btn);
+    out.appendChild(e);
+    return;
+  }
+
+  const groups = {};
+  list.forEach(i=> (groups[i.cat] ||= []).push(i));
+  Object.keys(groups).sort().forEach(k=>{
+    const hd = el("div","sectionhead");
+    hd.innerHTML = `<span class="num">${esc(k)}</span><h2>${esc(CATS[k]||"Uncatalogued")}</h2><span class="rule"></span><span class="cnt">${groups[k].length}</span>`;
+    out.appendChild(hd);
+    const g = el("div","grid");
+    groups[k].forEach(it=> g.appendChild(cardFor(it)));
+    out.appendChild(g);
+  });
+}
+
+/* ============================================================
+   DETAIL
+   ============================================================ */
+let overlay = null;
+function closeOverlay(){ if(overlay){ overlay.remove(); overlay=null; document.body.style.overflow=""; } }
+function openOverlay(node){
+  closeOverlay();
+  overlay = el("div","scrim");
+  overlay.appendChild(node);
+  overlay.onclick = e => { if(e.target===overlay) closeOverlay(); };
+  document.body.appendChild(overlay);
+  document.body.style.overflow="hidden";
+  const f = node.querySelector("button,input,select,textarea");
+  if(f) f.focus();
+}
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ closeOverlay(); closeDrawer(); } });
+
+function openDetail(it){
+  const shots = photosFor(it,"web");
+  const tiles = photosFor(it,"thumb");
+  const src = shots[0] || null;
+  const n = el("div","sheet");
+  let want = Math.max(1, req[it.sku]||1);
+  n.innerHTML = `
+    <div class="hd"><span class="t">${esc(it.sku)} · ${esc(CATS[it.cat]||"")}</span><button class="x" aria-label="Close">×</button></div>
+    <div class="detail">
+      <div class="picwrap">
+        <div class="pic">${src?`<img id="bigshot" alt="${esc(it.name)}" src="${esc(src)}">`:`<span class="ph">no photo linked<br><br>${esc(it.src)}</span>`}</div>
+        ${shots.length>1?`<div class="strip">${shots.map((s,i)=>
+          `<button data-i="${i}" aria-pressed="${i===0}"><img alt="" src="${esc(tiles[i]||s)}"></button>`).join("")}</div>`:""}
+      </div>
+      <div class="info">
+        <h3>${esc(it.name)}</h3>
+        <p class="desc">${esc(it.desc||"Not written up in the sheet yet.")}</p>
+        <dl class="dl">
+          <div><dt>Height</dt><dd class="mono">${it.h!=null?it.h+" cm":"—"}</dd></div>
+          <div><dt>Width</dt><dd class="mono">${it.w!=null?it.w+" cm":"—"}</dd></div>
+          <div><dt>Depth</dt><dd class="mono">${it.d!=null?it.d+" cm":"—"}</dd></div>
+          <div><dt>In stock</dt><dd class="mono">${it.qty||1}${it.qtyNote?" ("+esc(it.qtyNote)+")":""}</dd></div>
+          ${pricing.show?`<div><dt>Rate</dt><dd class="mono">${esc(money(priceOf(it)))} per week · band ${esc(bandOf(it))}</dd></div>`:""}
+          <div><dt>Material</dt><dd class="mono">${materialsOf(it).join(", ")||"—"}</dd></div>
+          <div><dt>Photo files</dt><dd class="mono">${(it.files&&it.files.length)?it.files.map(esc).join("<br>"):"none"}</dd></div>
+        </dl>
+        ${needsSpecs(it)?`<div class="todo">needs measuring</div>`:""}
+        ${needsPhoto(it)?`<div class="todo">needs a photo</div>`:""}
+        <div class="addrow">
+          <div class="stepper">
+            <button data-s="-1" aria-label="Fewer">−</button><span id="wq">${want}</span><button data-s="1" aria-label="More">+</button>
+          </div>
+          <button class="bigbtn" id="addBtn">Add to request list</button>
+          ${isAdmin?`<button class="bigbtn ghost editbtn" id="editBtn">Edit</button>`:""}
+        </div>
+      </div>
+    </div>`;
+  n.querySelector(".x").onclick = closeOverlay;
+  n.querySelectorAll(".strip button").forEach(b=>b.onclick=()=>{
+    n.querySelectorAll(".strip button").forEach(o=>o.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    n.querySelector("#bigshot").src = shots[+b.dataset.i];
+  });
+  n.querySelectorAll(".stepper button").forEach(b=>b.onclick=()=>{
+    want = Math.min(it.qty||1, Math.max(1, want + (+b.dataset.s)));
+    n.querySelector("#wq").textContent = want;
+  });
+  const eb = n.querySelector("#editBtn");
+  if(eb) eb.onclick = ()=>{ closeOverlay(); editProp(it); };
+  n.querySelector("#addBtn").onclick = ()=>{
+    req[it.sku] = want; saveReq(); closeOverlay(); render(false);
+    toast(it.sku+" added — "+want+" pc");
+  };
+  openOverlay(n);
+}
+
+/* ============================================================
+   REQUEST LIST
+   ============================================================ */
+let drawer = null;
+function closeDrawer(){ if(drawer){ drawer.remove(); drawer=null; } }
+function saveReq(){ store.set("mag.req",req); store.set("mag.meta",meta); }
+
+function openDrawer(){
+  closeDrawer();
+  drawer = el("aside","drawer");
+  drawer.innerHTML = `
+    <div class="hd"><span class="brand">Request list</span><button class="x" aria-label="Close">×</button></div>
+    <div class="body"></div>
+    <div class="ft"></div>`;
+  drawer.querySelector(".x").onclick = closeDrawer;
+  const body = drawer.querySelector(".body");
+  const keys = Object.keys(req).sort();
+
+  if(!keys.length){
+    body.innerHTML = `<div class="empty" style="padding:40px 0"><h3>Nothing picked yet</h3>
+      <p>Open any prop and add it here. You’ll end up with a pull list you can send over with your shoot dates.</p></div>`;
+  } else {
+    keys.forEach(sku=>{
+      const it = items.find(i=>i.sku===sku); if(!it) return;
+      const src = photoFor(it);
+      const l = el("div","line");
+      l.innerHTML = `
+        <div class="lt">${src?`<img alt="" src="${esc(src)}">`:`<span>${esc(sku)}</span>`}</div>
+        <div class="lb"><div class="n">${esc(it.name)}</div>
+          <div class="m">${esc(sku)} · ${esc(dimsLine(it))}</div>
+          ${pricing.show?`<div class="lr">${esc(money(priceOf(it)))} × ${req[sku]} per week</div>`:""}</div>
+        <div class="lq"><button data-s="-1" aria-label="Fewer">−</button><span>${req[sku]}</span><button data-s="1" aria-label="More">+</button></div>`;
+      l.querySelectorAll(".lq button").forEach(b=>b.onclick=()=>{
+        req[sku] = Math.min(it.qty||1, req[sku] + (+b.dataset.s));
+        if(req[sku]<1) delete req[sku];
+        saveReq(); openDrawer(); render(false);
+      });
+      body.appendChild(l);
+    });
+  }
+
+  if(pricing.show && keys.length){
+    const q = quote();
+    const qb = el("div","quote");
+    qb.innerHTML = `
+      <div><span>Props, ${q.weeks===1?"one week":q.weeks+" weeks"}</span><span>${esc(money(q.sub))}</span></div>
+      ${q.topUp?`<div><span>Minimum order top-up</span><span>${esc(money(q.topUp))}</span></div>`:""}
+      ${!pricing.vatIncluded?`<div><span>VAT ${pricing.vat}%</span><span>${esc(money(q.vat))}</span></div>`:""}
+      <div class="big"><span>Estimate</span><span>${esc(money(q.total))}</span></div>
+      <span class="hint">${q.weeks>1
+        ? `First week at full rate, ${q.weeks-1} further ${q.weeks-1===1?"week":"weeks"} at ${Math.round(pricing.extraWeek*100)}%. `
+        : `Minimum hire is one week. `}${pricing.minOrder?`Minimum order ${esc(money(pricing.minOrder))} before VAT. `:""}Indicative only — the studio confirms the final figure.</span>`;
+    body.appendChild(qb);
+  }
+
+  const f = el("div","fields");
+  f.innerHTML = `
+    <div class="grouphd full">The job</div>
+    <div class="full"><label for="mProd">Production company *</label><input id="mProd" value="${esc(meta.production)}" placeholder="who we invoice"></div>
+    <div class="full"><label for="mProj">Project / working title</label><input id="mProj" value="${esc(meta.project)}" placeholder="shoot, campaign or episode"></div>
+
+    <div class="grouphd full">Dates</div>
+    <div><label for="mOut">Pick-up *</label><input id="mOut" type="date" value="${esc(meta.out)}"></div>
+    <div><label for="mOutT">Time</label><input id="mOutT" type="time" value="${esc(meta.outTime)}"></div>
+    <div><label for="mBack">Return</label><input id="mBack" type="date" value="${esc(meta.back)}"></div>
+    <div><label for="mBackT">Time</label><input id="mBackT" type="time" value="${esc(meta.backTime)}"></div>
+
+    <div class="grouphd full">Who to contact</div>
+    <div class="full"><label for="mCon">Name *</label><input id="mCon" value="${esc(meta.contact)}"></div>
+    <div><label for="mMail">Email *</label><input id="mMail" type="email" value="${esc(meta.email)}"></div>
+    <div><label for="mPhone">Phone</label><input id="mPhone" value="${esc(meta.phone)}"></div>
+
+    <div class="grouphd full">Invoice to</div>
+    <label class="same full"><input type="checkbox" id="mSame" ${meta.sameBill?"checked":""}> same as the production company above</label>
+    <div class="full billwrap"><label for="mBill">Company name</label><input id="mBill" value="${esc(meta.billTo)}"></div>
+    <div class="billwrap"><label for="mVat">VAT / tax no.</label><input id="mVat" value="${esc(meta.vat)}"></div>
+    <div class="billwrap"><label for="mReg">Reference / PO</label><input id="mReg" value="${esc(meta.po)}"></div>
+    <div class="full billwrap"><label for="mAddr">Billing address</label><textarea id="mAddr" rows="2">${esc(meta.address)}</textarea></div>
+
+    <div class="full"><label for="mNote">Anything else</label><textarea id="mNote" rows="2" placeholder="delivery, set details, substitutions you'd accept">${esc(meta.notes)}</textarea></div>`;
+  body.appendChild(f);
+
+  const readFields = ()=>{
+    meta = {
+      production:f.querySelector("#mProd").value, project:f.querySelector("#mProj").value,
+      out:f.querySelector("#mOut").value, outTime:f.querySelector("#mOutT").value,
+      back:f.querySelector("#mBack").value, backTime:f.querySelector("#mBackT").value,
+      contact:f.querySelector("#mCon").value, email:f.querySelector("#mMail").value,
+      phone:f.querySelector("#mPhone").value, sameBill:f.querySelector("#mSame").checked,
+      billTo:f.querySelector("#mBill").value, vat:f.querySelector("#mVat").value,
+      po:f.querySelector("#mReg").value, address:f.querySelector("#mAddr").value,
+      notes:f.querySelector("#mNote").value
+    };
+    saveReq();
+  };
+  const syncBill = ()=>{
+    const same = f.querySelector("#mSame").checked;
+    f.querySelectorAll(".billwrap").forEach(w=> w.style.display = same ? "none" : "");
+  };
+  f.querySelectorAll("input,textarea").forEach(inp=>inp.oninput = readFields);
+  f.querySelector("#mSame").onchange = ()=>{ readFields(); syncBill(); };
+  syncBill();
+
+  if(keys.length){
+    const tb = el("div","drawerterms");
+    tb.innerHTML = `<h4>Damage &amp; loss</h4><p>${esc(damageTerms())}</p>`;
+    body.appendChild(tb);
+  }
+
+  const ft = drawer.querySelector(".ft");
+  const bSend = el("button","bigbtn","Send request");
+  bSend.disabled = !keys.length;
+  bSend.onclick = ()=> submitRequest(bSend);
+  const bPdf = el("button","bigbtn ghost","Save PDF");
+  bPdf.disabled = !keys.length;
+  bPdf.onclick = ()=>{
+    try{ const {blob, filename} = buildPDF(newRef()); saveBlob(blob, filename); }
+    catch(err){ toast(err.message); }
+  };
+  const bCopy = el("button","linkbtn","Copy as text");
+  bCopy.onclick = ()=>{ navigator.clipboard.writeText(requestText()).then(()=>toast("copied")).catch(()=>toast("copy blocked")); };
+  const bCsv = el("button","linkbtn","CSV");
+  bCsv.onclick = downloadCSV;
+  const bClr = el("button","linkbtn","Empty list");
+  bClr.onclick = ()=>{ req={}; saveReq(); openDrawer(); render(false); };
+  ft.append(bSend,bPdf,bCopy,bCsv,bClr);
+
+  document.body.appendChild(drawer);
+}
+
+function requestText(ref){
+  const bill = billing(), rows = lines(), days = rentalDays();
+  const total = rows.reduce((a,r)=>a+r.qty,0);
+  const L = ["MAGNETS STUDIO — PROP RENTAL REQUEST"];
+  if(ref) L.push("Reference: "+ref);
+  L.push("Raised: "+new Date().toLocaleString("en-GB"), "");
+  L.push("PRODUCTION");
+  L.push("  Company:  "+(meta.production||"—"));
+  if(meta.project) L.push("  Project:  "+meta.project);
+  L.push("  Contact:  "+[meta.contact, meta.email, meta.phone].filter(Boolean).join(" · "), "");
+  L.push("DATES");
+  L.push("  Pick-up:  "+fmtDate(meta.out)+(meta.outTime?" at "+meta.outTime:""));
+  L.push("  Return:   "+fmtDate(meta.back)+(meta.backTime?" at "+meta.backTime:""));
+  if(days) L.push("  Duration: "+days+(days===1?" day":" days"));
+  L.push("", "INVOICE TO");
+  L.push("  Company:  "+(bill.name||"—"));
+  if(bill.vat) L.push("  VAT no.:  "+bill.vat);
+  if(bill.po) L.push("  Ref/PO:   "+bill.po);
+  if(bill.address) L.push("  Address:  "+bill.address.replace(/\n/g,"\n            "));
+  L.push("", `PROPS — ${rows.length} lines, ${total} pieces`);
+  if(pricing.show){
+    const q = quote();
+    q.rows.forEach(r=> L.push(`  ${r.sku}  ${r.name}  ×${r.qty}   ${r.dims}   ${money(r.rate)}/wk   ${money(r.total)}`));
+    L.push("", "ESTIMATE");
+    L.push(`  Props (${q.weeks===1?"one week":q.weeks+" weeks"}):  ${money(q.sub)}`);
+    if(q.topUp) L.push(`  Minimum order top-up:  ${money(q.topUp)}`);
+    if(!pricing.vatIncluded) L.push(`  VAT ${pricing.vat}%:  ${money(q.vat)}`);
+    L.push(`  TOTAL:  ${money(q.total)}`);
+    L.push("  Minimum hire one week. Indicative — the studio confirms the final figure.");
+  } else {
+    rows.forEach(r=> L.push(`  ${r.sku}  ${r.name}  ×${r.qty}   ${r.dims}`));
+  }
+  if(meta.notes) L.push("", "NOTES", "  "+meta.notes.replace(/\n/g,"\n  "));
+  L.push("", "DAMAGE & LOSS", "  "+damageTerms().replace(/(.{1,88})(\s|$)/g,"$1\n  ").trim());
+  L.push("", "Request only — not a confirmed booking until Magnets Studio replies.");
+  return L.join("\n");
+}
+function downloadCSV(){
+  const q = quote();
+  const rows = [["SKU","Name","Qty requested","Height","Width","Depth","Rate/week","Line total","Description"]];
+  q.rows.forEach(r=>{
+    const it = items.find(i=>i.sku===r.sku); if(!it) return;
+    rows.push([r.sku,it.name,r.qty,it.h??"",it.w??"",it.d??"",r.rate,Math.round(r.total*100)/100,it.desc||""]);
+  });
+  rows.push([]);
+  rows.push(["","","","","","Subtotal",Math.round(q.sub*100)/100]);
+  if(q.topUp) rows.push(["","","","","","Minimum top-up",Math.round(q.topUp*100)/100]);
+  if(!pricing.vatIncluded) rows.push(["","","","","",`VAT ${pricing.vat}%`,Math.round(q.vat*100)/100]);
+  rows.push(["","","","","","Estimate",Math.round(q.total*100)/100]);
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a = el("a"); a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download = "prop-request"+(meta.production?"-"+meta.production.replace(/\W+/g,"-").toLowerCase():"")+".csv";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ============================================================
+   PRICING
+   Priced by the week, the way prop houses generally do it.
+   Each prop sits in a band; a band is a weekly rate. Extra weeks
+   are charged at a reduced rate. Nothing is per-day.
+   ============================================================ */
+let pricing = {
+  v: 3,                       // bump when a default changes, so saved settings follow
+  show: true,                 // show prices to whoever opens the page
+  currency: "€",
+  bands: {A:3, B:6, C:12, D:25, E:50},
+  extraWeek: 0.5,             // weeks after the first, as a fraction of the first
+  minOrder: 50,               // net of VAT — below this, the order isn't worth handling
+  vat: 22,                    // Slovenian standard rate
+  vatIncluded: false,
+  lossMultiple: 4,            // lost or unrepairable: this many times the weekly rate
+  damageText: ""              // leave empty to use the wording below
+};
+
+/* The terms that appear at the foot of the page, the request and the PDF. */
+function damageTerms(){
+  if(pricing.damageText.trim()) return pricing.damageText.trim();
+  return `Props remain the hirer’s responsibility from collection until they are back `
+    + `on our shelves, transport included. Anything returned damaged is charged at the `
+    + `cost of repair. Anything lost, or damaged beyond repair, is charged at `
+    + `${pricing.lossMultiple} times its weekly hire rate, counted per piece rather than per set.`;
+}
+
+/* a sensible starting band from what the thing is, then how big it is.
+   Length alone is a poor guide — a 30 cm wooden spoon is not a 30 cm pot. */
+function autoBand(it){
+  const hay = (it.name+" "+it.desc).toLowerCase();
+  const big = Math.max(it.h||0, it.w||0, it.d||0);
+  const step = (b,n)=>{ const o="ABCDE"; return o[Math.min(4, Math.max(0, o.indexOf(b)+n))]; };
+
+  // powered things carry real risk and replacement cost
+  if(/electric|induction|infrared|kettle|mixer|coffee maker|thermometer/.test(hay))
+    return big >= 30 ? "D" : "C";
+  // scales, stands, holders — mid-value hardware
+  if(/scale|stand|holder|dispenser|knife holder/.test(hay)) return big >= 30 ? "C" : "B";
+  // hand tools: thin, cheap, quick to replace, however long they are
+  if(/spoon|knife|ladle|whisk|tong|tweezer|brush|scoop|zester|fork|needle|spatula|trier|sieve|grater|juicer|funnel/.test(hay))
+    return big >= 40 ? "B" : "A";
+  // flat goods priced off footprint
+  if(/board|tray|trivet|menu|folder|blackboard/.test(hay))
+    return big >= 70 ? "D" : big >= 40 ? "C" : "B";
+  // vessels and containers
+  if(/jar|shaker|bottle|cup|bowl|basket|pot|glass/.test(hay))
+    return big >= 30 ? "C" : big >= 15 ? "B" : "A";
+  // display pieces tend to be the nice things
+  if(/cloche|cake stand|ice bucket|prosciutto stand|condiment/.test(hay))
+    return big >= 20 ? "D" : "C";
+  if(/apron|glove/.test(hay)) return "B";
+
+  if(!big) return "B";                                 // unmeasured, middle of the road
+  return big >= 60 ? "D" : big >= 30 ? "C" : big >= 15 ? "B" : "A";
+}
+const bandOf = it => it.band || autoBand(it);
+function priceOf(it){
+  if(typeof it.price === "number") return it.price;    // explicit price wins
+  return pricing.bands[bandOf(it)] ?? 0;
+}
+function money(n){
+  const v = Math.round(n*100)/100;
+  return pricing.currency + (v % 1 === 0 ? v.toFixed(0) : v.toFixed(2));
+}
+function weeksFor(){
+  const d = rentalDays();
+  if(!d) return 1;
+  return Math.max(1, Math.ceil(d/7));
+}
+/* first week in full, later weeks discounted */
+function weekUnits(){
+  const w = weeksFor();
+  return 1 + (w-1) * pricing.extraWeek;
+}
+function quote(){
+  const units = weekUnits();
+  const rows = lines().map(r=>{
+    const it = items.find(i=>i.sku===r.sku);
+    const rate = priceOf(it);
+    return Object.assign({}, r, {rate, total: rate * r.qty * units});
+  });
+  const sub = rows.reduce((a,r)=>a+r.total, 0);
+  const topUp = sub > 0 && sub < pricing.minOrder ? pricing.minOrder - sub : 0;
+  const net = sub + topUp;
+  const vat = pricing.vatIncluded ? 0 : net * pricing.vat/100;
+  return {rows, units, weeks: weeksFor(), sub, topUp, net, vat, total: net + vat};
+}
+
+/* ============================================================
+   PDF + SENDING
+   ============================================================ */
+const SEND_TO = "bonino@magnets-studio.com";
+let formCfg = { endpoint:"https://api.web3forms.com/submit", key:"", attach:true };
+
+function newRef(){
+  const d = new Date(), p = n => String(n).padStart(2,"0");
+  return `MS-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+}
+function saveBlob(blob, filename){
+  const a = el("a"); a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+function fmtDate(s){
+  if(!s) return "—";
+  const d = new Date(s+"T00:00:00");
+  return isNaN(d) ? s : d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
+}
+function rentalDays(){
+  if(!meta.out || !meta.back) return null;
+  const a = new Date(meta.out), b = new Date(meta.back);
+  if(isNaN(a)||isNaN(b)||b<a) return null;
+  return Math.max(1, Math.round((b-a)/86400000));
+}
+function billing(){
+  return meta.sameBill
+    ? {name: meta.production, vat: meta.vat, address: meta.address, po: meta.po}
+    : {name: meta.billTo || meta.production, vat: meta.vat, address: meta.address, po: meta.po};
+}
+function lines(){
+  return Object.keys(req).sort().map(sku=>{
+    const it = items.find(i=>i.sku===sku);
+    return it ? {sku, name:it.name, qty:req[sku], dims:dimsLine(it), cat:CATS[it.cat]||it.cat} : null;
+  }).filter(Boolean);
+}
+
+function buildPDF(ref){
+  const J = window.jspdf && window.jspdf.jsPDF;
+  if(!J) throw new Error("PDF library didn’t load — check the connection, or use Copy as text");
+  const doc = new J({unit:"mm", format:"a4"});
+  const L=18, R=192, W=R-L;
+  const bill = billing(), rows = lines(), days = rentalDays();
+  let y = 20;
+
+  const rule = (yy, w=0.2)=>{ doc.setLineWidth(w); doc.setDrawColor(150); doc.line(L,yy,R,yy); };
+  const label = (t,x,yy)=>{ doc.setFont("helvetica","normal"); doc.setFontSize(7);
+    doc.setTextColor(130); doc.text(t.toUpperCase(),x,yy); doc.setTextColor(20); };
+  const value = (t,x,yy,size=10,style="normal")=>{ doc.setFont("helvetica",style);
+    doc.setFontSize(size); doc.text(String(t||"—"),x,yy); };
+
+  doc.setFont("helvetica","bold"); doc.setFontSize(19);
+  doc.text("PROP RENTAL REQUEST", L, y);
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(110);
+  doc.text("Magnets Studio · Prop House · Ljubljana", L, y+5.5);
+  doc.setFontSize(10); doc.setTextColor(20);
+  doc.text(ref, R, y, {align:"right"});
+  doc.setFontSize(8.5); doc.setTextColor(110);
+  doc.text(new Date().toLocaleDateString("en-GB"), R, y+5.5, {align:"right"});
+  doc.setTextColor(20);
+  y += 11; rule(y, 0.5); y += 8;
+
+  const colB = L + W/2 + 4, colW = W/2 - 6;
+  label("Production", L, y); label("Invoice to", colB, y); y += 5;
+  value(meta.production, L, y, 11, "bold");
+  value(bill.name, colB, y, 11, "bold");
+
+  let yl = y + 5.4, yr = y + 5.4;                     // the two columns run on separately
+  doc.setFont("helvetica","normal"); doc.setFontSize(9);
+  if(meta.project){
+    const pr = doc.splitTextToSize("Project: "+meta.project, colW);
+    doc.text(pr, L, yl); yl += pr.length*4.4;
+  }
+  if(bill.vat){ doc.text("VAT "+bill.vat, colB, yr); yr += 4.4; }
+  if(bill.po){ doc.text("Ref/PO "+bill.po, colB, yr); yr += 4.4; }
+  if(bill.address){
+    const addr = doc.splitTextToSize(bill.address, colW);
+    doc.text(addr, colB, yr); yr += addr.length*4.4;
+  }
+  y = Math.max(yl, yr) + 5;
+
+  label("Contact", L, y); y += 5;
+  const contact = [meta.contact, meta.email, meta.phone].filter(Boolean).join("  ·  ");
+  value(contact, L, y, 9.5); y += 9;
+
+  rule(y); y += 7;
+  const third = W/3;
+  label("Pick-up", L, y); label("Return", L+third, y); label("Duration", L+third*2, y); y += 5.5;
+  value(fmtDate(meta.out) + (meta.outTime? "  "+meta.outTime : ""), L, y, 10.5, "bold");
+  value(fmtDate(meta.back) + (meta.backTime? "  "+meta.backTime : ""), L+third, y, 10.5, "bold");
+  value(days ? days + (days===1?" day":" days") : "—", L+third*2, y, 10.5, "bold");
+  y += 8; rule(y, 0.5); y += 8;
+
+  const priced = pricing.show;
+  const q = priced ? quote() : null;
+  const total = rows.reduce((a,r)=>a+r.qty,0);
+  label(`Props requested — ${rows.length} ${rows.length===1?"line":"lines"}, ${total} ${total===1?"piece":"pieces"}`, L, y);
+  y += 6;
+  const head = ()=>{
+    doc.setFontSize(7); doc.setTextColor(130);
+    doc.text("NO.", L, y); doc.text("PROP", L+16, y); doc.text("SIZE", L+82, y);
+    if(priced){
+      doc.text("QTY", L+128, y, {align:"right"});
+      doc.text("RATE/WK", L+152, y, {align:"right"});
+      doc.text("TOTAL", R, y, {align:"right"});
+    } else {
+      doc.text("QTY", R, y, {align:"right"});
+    }
+    doc.setTextColor(20); y += 2; rule(y); y += 5;
+  };
+  head();
+
+  rows.forEach((r,i)=>{
+    if(y > 252){ doc.addPage(); y = 22; head(); }
+    const qr = q ? q.rows[i] : null;
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    doc.setTextColor(110); doc.text(r.sku, L, y);
+    doc.setTextColor(20);
+    doc.text(doc.splitTextToSize(r.name, priced?62:76)[0], L+16, y);
+    doc.setTextColor(110); doc.setFontSize(7.5);
+    doc.text(doc.splitTextToSize(r.dims, 42)[0], L+82, y);
+    doc.setTextColor(20); doc.setFontSize(9);
+    if(priced){
+      doc.text("×"+r.qty, L+128, y, {align:"right"});
+      doc.setTextColor(110); doc.text(money(qr.rate), L+152, y, {align:"right"});
+      doc.setTextColor(20); doc.setFont("helvetica","bold");
+      doc.text(money(qr.total), R, y, {align:"right"});
+    } else {
+      doc.setFont("helvetica","bold"); doc.setFontSize(9.5);
+      doc.text("×"+r.qty, R, y, {align:"right"});
+    }
+    y += 4.2; doc.setDrawColor(225); doc.setLineWidth(0.1); doc.line(L,y,R,y); y += 4.2;
+  });
+
+  if(priced){
+    if(y > 238){ doc.addPage(); y = 22; }
+    y += 3;
+    const money2 = (lbl, val, bold)=>{
+      doc.setFont("helvetica", bold?"bold":"normal");
+      doc.setFontSize(bold?11:9);
+      doc.setTextColor(bold?20:110); doc.text(lbl, L+108, y);
+      doc.setTextColor(20); doc.text(val, R, y, {align:"right"});
+      y += bold?6:4.8;
+    };
+    money2(q.weeks===1 ? "Props, one week" : `Props, ${q.weeks} weeks`, money(q.sub));
+    if(q.topUp) money2("Minimum order top-up", money(q.topUp));
+    if(!pricing.vatIncluded) money2(`VAT ${pricing.vat}%`, money(q.vat));
+    doc.setDrawColor(150); doc.setLineWidth(0.3); doc.line(L+108, y-2, R, y-2); y += 2;
+    money2("Estimate", money(q.total), true);
+    doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(130);
+    const terms = q.weeks>1
+      ? `First week at full rate, ${q.weeks-1} further at ${Math.round(pricing.extraWeek*100)}%. Minimum hire one week.`
+      : `Minimum hire one week.`;
+    const tl = doc.splitTextToSize(terms, R-(L+108));
+    doc.text(tl, L+108, y); doc.setTextColor(20); y += tl.length*3.4 + 4;
+  }
+
+  if(meta.notes){
+    y += 4; label("Notes", L, y); y += 5;
+    doc.setFont("helvetica","normal"); doc.setFontSize(9);
+    const nn = doc.splitTextToSize(meta.notes, W);
+    doc.text(nn, L, y); y += nn.length*4.4;
+  }
+
+  // damage and loss — must always land whole, never split across a page
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5);
+  const dt = doc.splitTextToSize(damageTerms(), W);
+  const blockH = 12 + dt.length*4;
+  if(y + blockH > 278){ doc.addPage(); y = 22; }
+  y += 8; rule(y, 0.4); y += 6;
+  label("Damage & loss", L, y); y += 5;
+  doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(60);
+  doc.text(dt, L, y); doc.setTextColor(20); y += dt.length*4;
+
+  const pages = doc.internal.getNumberOfPages();
+  for(let p=1; p<=pages; p++){
+    doc.setPage(p);
+    doc.setFontSize(7.5); doc.setTextColor(140);
+    doc.text(`${ref} · request only, not a confirmed booking until Magnets Studio replies`, L, 287);
+    doc.text(`${p}/${pages}`, R, 287, {align:"right"});
+  }
+
+  const who = (meta.production||bill.name||"request").replace(/[^\w\s-]/g,"").trim().replace(/\s+/g,"-").toLowerCase();
+  return {blob: doc.output("blob"), filename: `${ref}-${who||"prop-request"}.pdf`, ref};
+}
+
+function validate(){
+  const miss = [];
+  if(!Object.keys(req).length) miss.push("at least one prop");
+  if(!meta.production.trim()) miss.push("production company");
+  if(!meta.contact.trim()) miss.push("contact name");
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(meta.email.trim())) miss.push("a valid email");
+  if(!meta.out) miss.push("a pick-up date");
+  if(meta.out && meta.back && new Date(meta.back) < new Date(meta.out))
+    miss.push("a return date that isn’t before the pick-up");
+  return miss;
+}
+
+async function submitRequest(btn){
+  const miss = validate();
+  if(miss.length){ toast("still needed: " + miss.join(", ")); return; }
+
+  const ref = newRef();
+  let pdf = null;
+  try{ pdf = buildPDF(ref); }
+  catch(err){ toast(err.message); }
+
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = "Sending…";
+
+  const fd = new FormData();
+  if(formCfg.key) fd.append("access_key", formCfg.key);
+  fd.append("subject", `Prop request ${ref} — ${meta.production}`);
+  fd.append("from_name", "Magnets Studio prop house");
+  fd.append("email", meta.email);
+  fd.append("replyto", meta.email);
+  fd.append("reference", ref);
+  fd.append("message", requestText(ref));
+  if(pdf && formCfg.attach) fd.append("attachment", pdf.blob, pdf.filename);
+
+  let ok = false, why = "";
+  if(!formCfg.endpoint || !formCfg.key){
+    why = "no form service set up yet";
+  } else {
+    try{
+      const r = await fetch(formCfg.endpoint, {method:"POST", body:fd});
+      ok = r.ok;
+      if(!ok) why = "the form service replied " + r.status;
+    }catch(e){ why = "couldn’t reach the form service"; }
+  }
+
+  btn.disabled = false; btn.textContent = label;
+  if(pdf) saveBlob(pdf.blob, pdf.filename);
+  showResult(ok, ref, why, pdf);
+}
+
+function mailtoLink(ref){
+  return "mailto:" + SEND_TO
+    + "?subject=" + encodeURIComponent(`Prop request ${ref} — ${meta.production}`)
+    + "&body=" + encodeURIComponent(requestText(ref) + "\n\n(The PDF has been saved to your downloads — please attach it.)");
+}
+
+function showResult(ok, ref, why, pdf){
+  const n = el("div","sheet");
+  n.style.maxWidth = "560px";
+  n.innerHTML = `
+    <div class="hd"><span class="t">${ok?"Request sent":"Not sent"}</span><button class="x" aria-label="Close">×</button></div>
+    <div class="panel">
+      <h4 style="margin-top:0">${ok?"On its way to Magnets Studio":"The email didn’t go through"}</h4>
+      <p>${ok
+        ? `Reference <code>${esc(ref)}</code>. It’s gone to <code>${esc(SEND_TO)}</code>, and a copy of the PDF has been saved to your downloads. Nothing is reserved until the studio replies.`
+        : `${esc(why||"something went wrong")}. The PDF is saved to your downloads, so nothing is lost — send it across by email instead.`}</p>
+      <div class="rowbtns">
+        ${!ok?`<a class="bigbtn" style="text-decoration:none" href="${mailtoLink(ref)}">Open in email</a>`:""}
+        ${pdf?`<button class="bigbtn ghost" id="again">Save the PDF again</button>`:""}
+        <button class="${ok?"bigbtn":"linkbtn"}" id="done">${ok?"Done":"Back to the list"}</button>
+      </div>
+    </div>`;
+  n.querySelector(".x").onclick = closeOverlay;
+  n.querySelector("#done").onclick = ()=>{
+    closeOverlay();
+    if(ok){ req = {}; saveReq(); closeDrawer(); render(false); }
+  };
+  const again = n.querySelector("#again");
+  if(again) again.onclick = ()=> saveBlob(pdf.blob, pdf.filename);
+  openOverlay(n);
+}
+
+
+/* ============================================================
+   ADMIN
+   A static page cannot authenticate anyone: everything it knows,
+   the visitor's browser knows too. This gate hides the editing
+   controls from people who shouldn't be poking at them. It is a
+   lock on a cupboard, not a safe. Real protection comes from the
+   host — see the note in the admin panel.
+   ============================================================ */
+let isAdmin = false, published = null, dirty = false;
+
+const hex = buf => [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+
+async function derive(pass, saltHex){
+  const enc = new TextEncoder();
+  const salt = saltHex ? Uint8Array.from(saltHex.match(/../g).map(h=>parseInt(h,16)))
+                       : crypto.getRandomValues(new Uint8Array(16));
+  const key = await crypto.subtle.importKey("raw", enc.encode(pass), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    {name:"PBKDF2", salt, iterations:200000, hash:"SHA-256"}, key, 256);
+  return {hash: hex(bits), salt: hex(salt.buffer ? salt : salt)};
+}
+
+/* default passphrase is "magnets" — the panel nags until it's changed */
+let gate = { salt:"", hash:"", isDefault:true };
+
+async function checkPass(pass){
+  if(!gate.hash){                                  // never set: accept the default once
+    const d = await derive("magnets", null);
+    gate = {salt:d.salt, hash:d.hash, isDefault:true};
+  }
+  const d = await derive(pass, gate.salt);
+  return d.hash === gate.hash;
+}
+
+function markDirty(){
+  dirty = true;
+  const b = document.getElementById("adminBar");
+  if(b) b.classList.add("dirty");
+  updateAdminBar();
+}
+
+function updateAdminBar(){
+  const b = document.getElementById("adminBar");
+  if(!b) return;
+  b.querySelector(".state").textContent = dirty
+    ? "unpublished changes on this device"
+    : "in step with the published site";
+}
+
+function showAdminBar(){
+  if(document.getElementById("adminBar")) return;
+  const bar = document.createElement("div");
+  bar.id = "adminBar"; bar.className = "adminbar";
+  bar.innerHTML = `<span class="tag">Admin</span><span class="state"></span>
+    <span class="sp"></span>
+    <button class="topbtn" id="aPublish">Publish</button>
+    <button class="topbtn" id="aExit">Leave admin</button>`;
+  document.body.appendChild(bar);
+  document.body.classList.add("hasbar");
+  bar.querySelector("#aPublish").onclick = publish;
+  bar.querySelector("#aExit").onclick = ()=>{
+    isAdmin = false; store.set("mag.admin", false);
+    bar.remove(); document.body.classList.remove("hasbar");
+    document.getElementById("btnSettings").classList.add("hidden");
+    render();
+  };
+  updateAdminBar();
+}
+
+function enterAdmin(){
+  isAdmin = true;
+  store.set("mag.admin", true);
+  document.getElementById("btnSettings").classList.remove("hidden");
+  showAdminBar();
+  render();
+}
+
+function askPass(){
+  const n = el("div","sheet"); n.style.maxWidth = "440px";
+  n.innerHTML = `
+    <div class="hd"><span class="t">Studio access</span><button class="x" aria-label="Close">×</button></div>
+    <div class="panel">
+      <p>Enter the studio passphrase to edit the catalogue, prices and photos.</p>
+      <input type="password" id="passIn" placeholder="passphrase" autocomplete="current-password">
+      <div class="rowbtns"><button class="bigbtn" id="passGo">Unlock</button>
+        <span class="mono" id="passMsg" style="font-size:11px;color:var(--soft)"></span></div>
+      <p class="note">This hides the editing controls. It does not encrypt anything — anyone determined can read this page's source. Put a real password on the site at your host if that matters.</p>
+    </div>`;
+  n.querySelector(".x").onclick = closeOverlay;
+  const go = async ()=>{
+    const v = n.querySelector("#passIn").value;
+    n.querySelector("#passMsg").textContent = "checking…";
+    if(await checkPass(v)){ closeOverlay(); enterAdmin(); toast("admin mode"); }
+    else n.querySelector("#passMsg").textContent = "not that one";
+  };
+  n.querySelector("#passGo").onclick = go;
+  n.querySelector("#passIn").onkeydown = e => { if(e.key === "Enter") go(); };
+  openOverlay(n);
+}
+
+/* ---------- publishing ---------- */
+function siteData(){
+  return {
+    version: 1,
+    generated: new Date().toISOString(),
+    cats: CATS, folders: FOLDERS, manifestMode,
+    imgBase, useFolders,
+    items: items.map(i=>({sku:i.sku, cat:i.cat, name:i.name, src:i.src,
+      h:i.h, w:i.w, d:i.d, qty:i.qty, qtyNote:i.qtyNote||null,
+      desc:i.desc, price:(typeof i.price === "number" ? i.price : null),
+      band:i.band||null, files:i.files||[]})),
+    pricing, form: formCfg, gate
+  };
+}
+
+function publish(){
+  const blob = new Blob([JSON.stringify(siteData(), null, 1)], {type:"application/json"});
+  saveBlob(blob, "catalogue.json");
+  dirty = false;
+  document.getElementById("adminBar").classList.remove("dirty");
+  updateAdminBar();
+  const n = el("div","sheet"); n.style.maxWidth = "520px";
+  n.innerHTML = `
+    <div class="hd"><span class="t">Publishing</span><button class="x" aria-label="Close">×</button></div>
+    <div class="panel">
+      <h4 style="margin-top:0">catalogue.json is in your downloads</h4>
+      <p>That one file carries the whole catalogue — props, sizes, prices, terms, photo links. The site reads it on load, so until you upload it, visitors still see the previous version.</p>
+      <p><b>To put it live:</b> drop it into your <code>props-web</code> folder next to <code>index.html</code>, replacing the old one, then drag the folder onto Netlify again. About thirty seconds.</p>
+      <p class="note">Adding photos? Run the photo prep tool over the whole Dropbox folder first, upload the new <code>props-web</code>, then load the fresh <code>manifest.json</code> here and publish again.</p>
+    </div>`;
+  n.querySelector(".x").onclick = closeOverlay;
+  openOverlay(n);
+}
+
+function applySiteData(dz){
+  if(!dz || !dz.items) return false;
+  items = dz.items.map(i=> Object.assign({}, i));
+  if(dz.cats) CATS = dz.cats;
+  if(dz.folders) FOLDERS = Object.assign(FOLDERS, dz.folders);
+  if(dz.pricing) pricing = Object.assign(pricing, dz.pricing);
+  if(dz.form) formCfg = Object.assign(formCfg, dz.form);
+  if(dz.gate && dz.gate.hash) gate = dz.gate;
+  if(typeof dz.imgBase === "string") imgBase = dz.imgBase;
+  if(typeof dz.useFolders === "boolean") useFolders = dz.useFolders;
+  if(dz.manifestMode) manifestMode = true;
+  return true;
+}
+
+/* ---------- editing a prop ---------- */
+function editProp(it){
+  const isNew = !it;
+  const p = it || {sku:"", cat:Object.keys(CATS)[0]||"01", name:"", src:"", h:null, w:null, d:null,
+                   qty:1, desc:"", files:[]};
+  const n = el("div","sheet"); n.style.maxWidth = "620px";
+  n.innerHTML = `
+    <div class="hd"><span class="t">${isNew?"New prop":"Editing "+esc(p.sku)}</span><button class="x" aria-label="Close">×</button></div>
+    <div class="panel">
+      <div class="pricegrid" style="grid-template-columns:1fr 2fr">
+        <div><label for="eSku">Number</label><input type="text" id="eSku" value="${esc(p.sku)}" placeholder="04.01"></div>
+        <div><label for="eName">Name</label><input type="text" id="eName" value="${esc(p.name)}"></div>
+      </div>
+      <div class="pricegrid">
+        <div><label for="eH">Height cm</label><input type="number" id="eH" step="0.1" value="${p.h??""}"></div>
+        <div><label for="eW">Width cm</label><input type="number" id="eW" step="0.1" value="${p.w??""}"></div>
+        <div><label for="eD">Depth cm</label><input type="number" id="eD" step="0.1" value="${p.d??""}"></div>
+        <div><label for="eQ">In stock</label><input type="number" id="eQ" min="1" value="${p.qty||1}"></div>
+      </div>
+      <div class="pricegrid" style="grid-template-columns:1fr 1fr 2fr">
+        <div><label for="ePrice">Price/week</label><input type="number" id="ePrice" step="0.5" value="${typeof p.price==="number"?p.price:""}" placeholder="auto"></div>
+        <div><label for="eBand">Band</label><input type="text" id="eBand" value="${esc(p.band||"")}" placeholder="auto (${esc(bandOf(p))})"></div>
+        <div><label for="eCat">Shelf</label><input type="text" id="eCat" value="${esc(p.cat)}" placeholder="01"></div>
+      </div>
+      <p style="margin-top:12px"><label for="eDesc" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)">Description</label></p>
+      <textarea id="eDesc" style="height:70px">${esc(p.desc||"")}</textarea>
+      <p style="margin-top:12px"><label for="eFiles" style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)">Photo files, one per line</label></p>
+      <textarea id="eFiles" style="height:60px">${esc((p.files||[]).join("\n"))}</textarea>
+      <div class="rowbtns">
+        <button class="bigbtn" id="eSave">${isNew?"Add it":"Save"}</button>
+        ${isNew?"":`<button class="linkbtn" id="eDel">Delete this prop</button>`}
+        <span class="mono" id="eMsg" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+    </div>`;
+  n.querySelector(".x").onclick = closeOverlay;
+  n.querySelector("#eSave").onclick = ()=>{
+    const g = id => n.querySelector(id).value.trim();
+    const sku = g("#eSku");
+    if(!/^\d{2}\.\d{2}$/.test(sku)){ n.querySelector("#eMsg").textContent = "number must look like 04.01"; return; }
+    if(isNew && items.some(i=>i.sku===sku)){ n.querySelector("#eMsg").textContent = sku+" already exists"; return; }
+    const cat = g("#eCat") || sku.slice(0,2);
+    const rec = {
+      sku, cat, name: g("#eName") || "Untitled prop",
+      src: p.src || (sku+"_"+(g("#eName")||"prop").toLowerCase()),
+      h: num(g("#eH")), w: num(g("#eW")), d: num(g("#eD")),
+      qty: Math.max(1, parseInt(g("#eQ"),10) || 1),
+      qtyNote: p.qtyNote || null,
+      desc: n.querySelector("#eDesc").value.trim(),
+      price: g("#ePrice") === "" ? undefined : (num(g("#ePrice")) ?? undefined),
+      band: g("#eBand").toUpperCase() || null,
+      files: n.querySelector("#eFiles").value.split(/\n+/).map(x=>x.trim()).filter(Boolean)
+    };
+    if(rec.price === undefined) delete rec.price;
+    if(!CATS[cat]) CATS[cat] = "Shelf "+cat;
+    const at = items.findIndex(i=> i.sku === (it ? it.sku : sku));
+    if(at >= 0) items[at] = rec; else items.push(rec);
+    items.sort((a,b)=>a.sku.localeCompare(b.sku));
+    store.set("mag.items", items); store.set("mag.cats", CATS);
+    markDirty(); closeOverlay(); render(); toast(isNew ? sku+" added" : sku+" saved");
+  };
+  const del = n.querySelector("#eDel");
+  if(del) del.onclick = ()=>{
+    if(del.dataset.sure !== "1"){ del.dataset.sure = "1"; del.textContent = "Really delete?"; return; }
+    items = items.filter(i=> i.sku !== it.sku);
+    delete req[it.sku];
+    store.set("mag.items", items); saveReq();
+    markDirty(); closeOverlay(); render(); toast(it.sku+" deleted");
+  };
+  openOverlay(n);
+}
+
+/* ============================================================
+   CATALOGUE + PHOTOS PANEL
+   ============================================================ */
+function openSettings(){
+  const n = el("div","sheet");
+  n.innerHTML = `
+    <div class="hd"><span class="t">Catalogue + photos</span><button class="x" aria-label="Close">×</button></div>
+    <div class="panel">
+      <h4>1 · Link the photos</h4>
+      <p><b>Right now, on this machine:</b> point the page at your Dropbox folder. The photos stay on your computer, nothing uploads, and matching is by the number at the front of the file name — so <code>01.23_coffee maker moka pot.JPG</code> lands on prop 01.23.</p>
+      <div class="rowbtns">
+        <label class="filebtn">Choose photo folder<input type="file" id="pickDir" webkitdirectory directory multiple></label>
+        <label class="filebtn">Choose files instead<input type="file" id="pickFiles" multiple accept="image/*"></label>
+        <span class="mono" id="imgStat" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+
+      <p style="margin-top:16px"><b>For a site anyone can open:</b> run <code>prep_props.py</code> over the Dropbox folder first. It writes a <code>props-web</code> folder holding small <code>thumb</code> and <code>web</code> copies plus a <code>manifest.json</code>. Load that manifest here and the page picks up every rename the script made.</p>
+      <div class="rowbtns">
+        <label class="filebtn">Load manifest.json<input type="file" id="pickMf" accept=".json,application/json"></label>
+        <span class="mono" id="mfStat" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+      <p style="margin-top:14px">Then say where those files live. Leave this empty if you drop this page inside the <code>props-web</code> folder — it finds them by itself.</p>
+      <input type="text" id="baseUrl" placeholder="https://your-site.netlify.app/" value="">
+      <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;color:var(--soft)">
+        <input type="checkbox" id="useFolders"> untouched Dropbox photos, still in “01 - Kitchen” subfolders
+      </label>
+      <div class="rowbtns"><button class="bigbtn ghost" id="saveBase">Save address</button></div>
+
+      <h4>2 · Load the full spreadsheet</h4>
+      <p>The sheet currently documents 94 props; the Dropbox folder holds 125. Everything photographed is already in here — the 29 extra props show as “needs measuring” until the sheet catches up. In Google Sheets go to <code>File → Download → CSV</code> and drop the file here to refresh. Keep the column order: Name, Height, Width, Depth, Quantity, Description, and keep the category rows like <code>03 - Dining room</code>.</p>
+      <div class="rowbtns">
+        <label class="filebtn">Import CSV<input type="file" id="pickCsv" accept=".csv,text/csv"></label>
+        <button class="linkbtn" id="resetCat">Back to built-in catalogue</button>
+        <span class="mono" id="csvStat" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+      <p style="margin-top:14px">Or paste the rows straight from the sheet (select the cells, copy, paste below):</p>
+      <textarea id="pasteBox" placeholder="Name&#9;Height&#9;Width&#9;Depth&#9;Quantity&#9;Description"></textarea>
+      <div class="rowbtns"><button class="bigbtn ghost" id="pasteGo">Load pasted rows</button></div>
+
+      <h4>3 · Prices</h4>
+      <p>Priced by the week, which is how prop houses normally work — a minimum hire of one week, with later weeks discounted. Each prop sits in a band; set the band rates here and every prop follows. Bands are guessed from size and type until you say otherwise, and any prop can carry its own price via a <code>Price</code> column in the sheet.</p>
+      <div class="bandgrid" id="bandGrid"></div>
+      <div class="pricegrid">
+        <div><label for="pCur">Currency</label><input type="text" id="pCur"></div>
+        <div><label for="pExtra">Later weeks (%)</label><input type="number" id="pExtra" min="0" max="100" step="5"></div>
+        <div><label for="pMin">Min order (excl. VAT)</label><input type="number" id="pMin" min="0" step="5"></div>
+        <div><label for="pVat">VAT (%)</label><input type="number" id="pVat" min="0" max="30" step="0.5"></div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;color:var(--soft)">
+        <input type="checkbox" id="pInc"> rates already include VAT
+      </label>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-size:13px;color:var(--soft)">
+        <input type="checkbox" id="pShow"> show prices on the page and in the PDF
+      </label>
+
+      <p style="margin-top:16px"><b>Damage &amp; loss.</b> This appears at the foot of the page, in the request list and at the end of every PDF. Leave the box empty to use the standard wording, which follows the multiple below.</p>
+      <div class="pricegrid" style="grid-template-columns:1fr 3fr">
+        <div><label for="pLoss">Loss multiple (× weekly)</label><input type="number" id="pLoss" min="1" max="50" step="1"></div>
+        <div><label for="pDmg">Your own wording (optional)</label><input type="text" id="pDmg" placeholder="leave empty for the standard text"></div>
+      </div>
+      <p class="note" id="dmgPreview"></p>
+
+      <div class="rowbtns">
+        <button class="bigbtn ghost" id="savePrice">Save prices</button>
+        <span class="mono" id="pStat" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+
+      <h4>4 · Where requests get emailed</h4>
+      <p>A page with no server can’t send email on its own, so it hands the request to a form service, which emails it to <code>${esc(SEND_TO)}</code>. Sign up at <a href="https://web3forms.com" target="_blank" rel="noopener">web3forms.com</a> with that address, paste the access key below, and you’re done. The free tier covers 250 requests a month.</p>
+      <input type="text" id="fKey" placeholder="access key from your form service" value="">
+      <p style="margin-top:10px;font-size:12.5px">Endpoint — only change this if you use a different service:</p>
+      <input type="text" id="fEnd" value="">
+      <label style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;color:var(--soft)">
+        <input type="checkbox" id="fAttach"> attach the PDF to the email
+      </label>
+      <p class="note">Attachments are a paid feature on most form services. Leave it off and the full request still arrives as text in the email body — the client keeps the PDF either way.</p>
+      <div class="rowbtns">
+        <button class="bigbtn ghost" id="saveForm">Save</button>
+        <button class="linkbtn" id="testForm">Send a test request</button>
+        <span class="mono" id="fStat" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+
+      <h4>6 · Studio access</h4>
+      <div id="passNag"></div>
+      <p>Change the passphrase that unlocks these controls. It's stored as a slow one-way hash inside <code>catalogue.json</code>, so it travels with the site and works on any device you log in from.</p>
+      <div class="pricegrid" style="grid-template-columns:1fr 1fr">
+        <div><label for="npass">New passphrase</label><input type="password" id="npass" placeholder="at least 8 characters"></div>
+        <div><label for="npass2">Again</label><input type="password" id="npass2"></div>
+      </div>
+      <div class="rowbtns">
+        <button class="bigbtn ghost" id="setPass">Set passphrase</button>
+        <span class="mono" id="passStat" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+      <p class="note"><b>This is a cupboard lock, not a safe.</b> The gate runs in the visitor's browser, so anyone who reads the page source can bypass it. It stops a producer wandering into your pricing panel; it will not stop someone who means it. If that matters, put a real password on the site at the host — Cloudflare Access will email you a one-time code and is free for a handful of users, and most hosts offer site-wide password protection on paid plans.</p>
+
+      <h4>7 · Publishing</h4>
+      <p>Everything you change here lives in this browser until you publish. <b>Publish</b> writes a single <code>catalogue.json</code>; drop it into your <code>props-web</code> folder beside <code>index.html</code> and re-upload. Visitors see the previous version until you do.</p>
+      <div class="rowbtns">
+        <button class="bigbtn" id="pubNow">Publish</button>
+        <label class="filebtn">Load a catalogue.json<input type="file" id="loadSite" accept=".json,application/json"></label>
+        <span class="mono" id="pubStat" style="font-size:11px;color:var(--soft)"></span>
+      </div>
+
+      <h4>8 · Export the catalogue</h4>
+      <p>Hand the whole current catalogue back as a clean CSV — useful as a backup or to re-import later.</p>
+      <div class="rowbtns"><button class="bigbtn ghost" id="expAll">Download catalogue CSV</button></div>
+    </div>`;
+  n.querySelector(".x").onclick = closeOverlay;
+
+  const stat = n.querySelector("#imgStat");
+  const handleFiles = fl => {
+    imgMap = {};
+    let hit = 0;
+    [...fl].sort((a,b)=>a.name.localeCompare(b.name)).forEach(f=>{
+      if(!/^image\//.test(f.type)) return;
+      const sku = skuFromFilename(f.webkitRelativePath || f.name);
+      if(sku){ (imgMap[sku] ||= []).push(URL.createObjectURL(f)); hit++; }
+    });
+    const props = Object.keys(imgMap).length;
+    stat.textContent = hit ? `${hit} photos matched to ${props} props` : "no file names matched a catalogue number";
+    render();
+  };
+  n.querySelector("#pickDir").onchange = e => handleFiles(e.target.files);
+  n.querySelector("#pickFiles").onchange = e => handleFiles(e.target.files);
+
+  const base = n.querySelector("#baseUrl"); base.value = imgBase;
+  const uf = n.querySelector("#useFolders"); uf.checked = useFolders;
+
+  n.querySelector("#pickMf").onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{
+      const stat = n.querySelector("#mfStat");
+      try{
+        const res = applyManifest(JSON.parse(r.result));
+        stat.textContent = `${res.total} photos linked · ${res.matched} matched, ${res.added} new props`;
+      }catch(err){ stat.textContent = "couldn’t read that manifest — " + err.message; }
+    };
+    r.readAsText(f);
+  };
+
+  n.querySelector("#saveBase").onclick = ()=>{
+    imgBase = base.value.trim(); useFolders = uf.checked;
+    store.set("mag.base",imgBase); store.set("mag.folders",useFolders);
+    render(); toast(imgBase ? "address saved" : "address cleared");
+  };
+
+  n.querySelector("#pickCsv").onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{ const res = loadRows(parseCSV(r.result));
+      n.querySelector("#csvStat").textContent = res+" props loaded"; };
+    r.readAsText(f);
+  };
+  n.querySelector("#pasteGo").onclick = ()=>{
+    const txt = n.querySelector("#pasteBox").value;
+    if(!txt.trim()) return toast("paste some rows first");
+    const rows = txt.trim().split(/\r?\n/).map(l=>l.split("\t"));
+    const res = loadRows(rows);
+    toast(res+" props loaded");
+  };
+  // pricing panel
+  const bg = n.querySelector("#bandGrid");
+  const counts = {};
+  items.forEach(i=> counts[bandOf(i)] = (counts[bandOf(i)]||0)+1);
+  bg.innerHTML = Object.keys(pricing.bands).map(b=>`
+    <div><label for="band${b}">Band ${b} <em>${counts[b]||0} props</em></label>
+    <input type="number" id="band${b}" min="0" step="1" value="${pricing.bands[b]}"></div>`).join("");
+  const pCur = n.querySelector("#pCur"), pExtra = n.querySelector("#pExtra"),
+        pMin = n.querySelector("#pMin"), pVat = n.querySelector("#pVat"),
+        pInc = n.querySelector("#pInc"), pShow = n.querySelector("#pShow");
+  pCur.value = pricing.currency; pExtra.value = Math.round(pricing.extraWeek*100);
+  pMin.value = pricing.minOrder; pVat.value = pricing.vat;
+  pInc.checked = pricing.vatIncluded; pShow.checked = pricing.show;
+  const pLoss = n.querySelector("#pLoss"), pDmg = n.querySelector("#pDmg"),
+        dmgPrev = n.querySelector("#dmgPreview");
+  pLoss.value = pricing.lossMultiple; pDmg.value = pricing.damageText;
+  const preview = ()=>{
+    const keep = [pricing.lossMultiple, pricing.damageText];
+    pricing.lossMultiple = Math.max(1, parseInt(pLoss.value,10) || 4);
+    pricing.damageText = pDmg.value;
+    dmgPrev.textContent = damageTerms();
+    [pricing.lossMultiple, pricing.damageText] = keep;
+  };
+  pLoss.oninput = preview; pDmg.oninput = preview; preview();
+
+  n.querySelector("#savePrice").onclick = ()=>{
+    const bands = {};
+    Object.keys(pricing.bands).forEach(b=>{
+      const v = parseFloat(n.querySelector("#band"+b).value);
+      bands[b] = isNaN(v) ? pricing.bands[b] : Math.max(0, v);
+    });
+    pricing = {
+      show: pShow.checked, currency: pCur.value.trim() || "€", bands,
+      extraWeek: Math.min(1, Math.max(0, (parseFloat(pExtra.value)||0)/100)),
+      minOrder: Math.max(0, parseFloat(pMin.value)||0),
+      vat: Math.max(0, parseFloat(pVat.value)||0),
+      vatIncluded: pInc.checked,
+      lossMultiple: Math.max(1, parseInt(pLoss.value,10) || 4),
+      damageText: pDmg.value
+    };
+    pricing.v = 3; store.set("mag.pricing", pricing); if(isAdmin) markDirty();
+    render();
+    n.querySelector("#pStat").textContent = "saved";
+  };
+
+  if(gate.isDefault || !gate.hash)
+    n.querySelector("#passNag").innerHTML =
+      `<p class="warn"><b>Still on the default passphrase</b> (<code>magnets</code>). Change it below, then publish.</p>`;
+  const fKey = n.querySelector("#fKey"), fEnd = n.querySelector("#fEnd"), fAtt = n.querySelector("#fAttach");
+  fKey.value = formCfg.key; fEnd.value = formCfg.endpoint; fAtt.checked = formCfg.attach;
+  n.querySelector("#saveForm").onclick = ()=>{
+    formCfg = {key:fKey.value.trim(), endpoint:fEnd.value.trim(), attach:fAtt.checked};
+    store.set("mag.form", formCfg);
+    n.querySelector("#fStat").textContent = formCfg.key ? "saved" : "no key — requests will fall back to email";
+  };
+  n.querySelector("#testForm").onclick = async ()=>{
+    const stat = n.querySelector("#fStat");
+    if(!fKey.value.trim()){ stat.textContent = "add an access key first"; return; }
+    stat.textContent = "sending…";
+    const fd = new FormData();
+    fd.append("access_key", fKey.value.trim());
+    fd.append("subject", "Prop house — test request");
+    fd.append("from_name", "Magnets Studio prop house");
+    fd.append("message", "This is a test from the prop house catalogue. If it reached you, requests will too.");
+    try{
+      const r = await fetch(fEnd.value.trim() || formCfg.endpoint, {method:"POST", body:fd});
+      stat.textContent = r.ok ? "sent — check the inbox" : "rejected with " + r.status;
+    }catch(e){ stat.textContent = "couldn’t reach the service"; }
+  };
+
+  // access + publishing
+  n.querySelector("#setPass").onclick = async ()=>{
+    const a = n.querySelector("#npass").value, b = n.querySelector("#npass2").value;
+    const st = n.querySelector("#passStat");
+    if(a.length < 8){ st.textContent = "at least 8 characters"; return; }
+    if(a !== b){ st.textContent = "those don’t match"; return; }
+    st.textContent = "hashing…";
+    const d = await derive(a, null);
+    gate = {salt:d.salt, hash:d.hash, isDefault:false};
+    markDirty();
+    st.textContent = "set — publish to make it live";
+    n.querySelector("#npass").value = ""; n.querySelector("#npass2").value = "";
+  };
+  n.querySelector("#pubNow").onclick = ()=>{ closeOverlay(); publish(); };
+  n.querySelector("#loadSite").onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=>{
+      try{
+        if(!applySiteData(JSON.parse(r.result))) throw new Error("no props in that file");
+        store.set("mag.items", items); store.set("mag.cats", CATS);
+        store.set("mag.pricing", pricing); store.set("mag.form", formCfg);
+        render();
+        n.querySelector("#pubStat").textContent = items.length + " props loaded";
+      }catch(err){ n.querySelector("#pubStat").textContent = "couldn’t read that — " + err.message; }
+    };
+    r.readAsText(f);
+  };
+
+  n.querySelector("#resetCat").onclick = ()=>{ items = SEED.slice(); CATS={"01":"Kitchen","02":"Restaurant","03":"Dining room"}; manifestMode=false; store.set("mag.items",null); store.set("mag.manifest",false); render(); toast("built-in catalogue restored"); };
+  n.querySelector("#expAll").onclick = ()=>{
+    const rows=[["SKU","Category","Name","Height","Width","Depth","Quantity","Description","Price","Band","Photo files"]];
+    items.forEach(i=>rows.push([i.sku,CATS[i.cat]||i.cat,i.name,i.h??"",i.w??"",i.d??"",i.qty??"",i.desc||"",priceOf(i),bandOf(i),(i.files||[]).join(" | ")]));
+    const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const a=el("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="magnets-prop-catalogue.csv"; a.click(); URL.revokeObjectURL(a.href);
+  };
+
+  openOverlay(n);
+}
+
+/* take the manifest.json written by prep_props.py and re-point every prop at it */
+function applyManifest(mf){
+  if(!mf || !mf.props) throw new Error("that file has no props in it");
+  const cats = Object.assign({}, CATS);
+  Object.entries(mf.folders||{}).forEach(([k,v])=>{
+    FOLDERS[k] = v;
+    if(!cats[k]) cats[k] = String(v).replace(/^\d+\s*[-–]\s*/,"") || ("Shelf "+k);
+  });
+  const bySku = {}; items.forEach(i=> bySku[i.sku] = i);
+  let matched = 0, added = 0;
+  Object.entries(mf.props).forEach(([sku, rec])=>{
+    const files = rec.files || [];
+    if(bySku[sku]){ bySku[sku].files = files; matched++; return; }
+    const cat = rec.cat || sku.slice(0,2);
+    const stem = (files[0]||sku).split("/").pop().replace(/\.[^.]+$/,"");
+    const nm = stem.replace(/^\d{2}[._\-]?\d{2}[._\-\s]*/,"").replace(/\s+\d{2}$/,"").trim();
+    if(!cats[cat]) cats[cat] = "Shelf "+cat;
+    items.push({sku, cat, name: nm ? nm.charAt(0).toUpperCase()+nm.slice(1) : "Untitled prop",
+                src: stem, h:null, w:null, d:null, qty:1, desc:"", files});
+    added++;
+  });
+  // props whose photos vanished from the manifest no longer have files
+  items.forEach(i=>{ if(!mf.props[i.sku]) i.files = []; });
+  items.sort((a,b)=>a.sku.localeCompare(b.sku));
+  CATS = cats;
+  manifestMode = true;
+  store.set("mag.items",items); store.set("mag.cats",CATS); if(isAdmin) markDirty();
+  store.set("mag.manifest",true); store.set("mag.folders2",FOLDERS);
+  render();
+  return {matched, added, total: Object.keys(mf.props).length};
+}
+
+/* if the page is served from inside the props-web folder, wire itself up */
+async function autoManifest(){
+  if(manifestMode) return false;
+  try{
+    const r = await fetch("manifest.json", {cache:"no-store"});
+    if(!r.ok) return false;
+    const res = applyManifest(await r.json());
+    toast(`${res.total} photos linked`);
+    return true;
+  }catch(e){ return false; }
+}
+/* minimal CSV parser (quotes, commas, newlines) */
+function parseCSV(text){
+  const rows=[]; let row=[],cell="",q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; }
+      else cell+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===","){ row.push(cell); cell=""; }
+      else if(c==="\n"){ row.push(cell); rows.push(row); row=[]; cell=""; }
+      else if(c==="\r"){}
+      else cell+=c;
+    }
+  }
+  if(cell.length||row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+
+/* turn sheet rows into catalogue items */
+function loadRows(rows){
+  const next=[], cats={};
+  let cur=null;
+  rows.forEach(r=>{
+    const a=(r[0]||"").trim();
+    if(!a) return;
+    if(/^name$/i.test(a)) return;                       // repeated header
+    const catM = a.match(/^(\d{2})\s*[-–]\s*(.+)$/);    // "01 - Kitchen"
+    if(catM){ cur=catM[1]; cats[cur]=catM[2].trim(); return; }
+    const skuM = a.match(/^(\d{2})[._\-](\d{2})[._\-\s]*(.*)$/);
+    if(!skuM) return;
+    const cat = skuM[1];
+    if(!cats[cat]) cats[cat] = CATS[cat] || ("Shelf "+cat);
+    const rawQty = (r[4]||"").trim();
+    let qty = parseInt(rawQty,10); if(isNaN(qty)||qty<1) qty=1;
+    const nm = (skuM[3]||"").trim();
+    next.push({
+      sku: skuM[1]+"."+skuM[2],
+      cat,
+      name: nm ? nm.charAt(0).toUpperCase()+nm.slice(1) : "Untitled prop",
+      src: a,
+      h:num(r[1]), w:num(r[2]), d:num(r[3]),
+      qty, qtyNote: /\D/.test(rawQty)&&rawQty ? rawQty : null,
+      desc:(r[5]||"").trim(),
+      price: num(r[6]),
+      band: (r[7]||"").trim().toUpperCase() || null
+    });
+  });
+  if(!next.length){ toast("no prop rows found in that file"); return 0; }
+  // keep the photo file lists already known for each catalogue number
+  const known = {}; items.forEach(i=> known[i.sku] = i.files||[]);
+  const seen = new Set(next.map(i=>i.sku));
+  next.forEach(i=> i.files = known[i.sku] || []);
+  // props that have photos but no row in the new sheet stay in the catalogue
+  items.forEach(old=>{
+    if(!seen.has(old.sku) && (old.files||[]).length){
+      next.push(Object.assign({},old));
+      if(!cats[old.cat]) cats[old.cat] = CATS[old.cat] || ("Shelf "+old.cat);
+    }
+  });
+  items = next; CATS = Object.assign({},cats);
+  store.set("mag.items",items); store.set("mag.cats",CATS); if(isAdmin) markDirty();
+  render();
+  return next.length;
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+document.getElementById("q").addEventListener("input", e=>{ state.q=e.target.value; render(); });
+document.getElementById("btnReq").onclick = openDrawer;
+document.getElementById("btnSettings").onclick = openSettings;
+
+(async function boot(){
+  /* The published catalogue.json is the source of truth for everyone.
+     Local edits are a draft that only the admin sees, until they publish. */
+  let hasPublished = false;
+  try{
+    const r = await fetch("catalogue.json", {cache:"no-store"});
+    if(r.ok) hasPublished = applySiteData(await r.json());
+  }catch(e){}
+
+  const [sr, sm, sa] = await Promise.all([
+    store.get("mag.req"), store.get("mag.meta"), store.get("mag.admin")
+  ]);
+  if(sr) req = sr;
+  if(sm) meta = Object.assign(meta, sm);
+
+  if(sa){
+    // returning admin on this device: reapply their draft over the published data
+    const [si, sc, sb, sf, mf, fo, fc, pr] = await Promise.all([
+      store.get("mag.items"), store.get("mag.cats"), store.get("mag.base"),
+      store.get("mag.folders"), store.get("mag.manifest"), store.get("mag.folders2"),
+      store.get("mag.form"), store.get("mag.pricing")
+    ]);
+    if(si && si.length){ items = si; dirty = true; }
+    if(sc) CATS = sc;
+    if(sb) imgBase = sb;
+    if(sf !== null && sf !== undefined) useFolders = sf;
+    if(mf) manifestMode = true;
+    if(fo) FOLDERS = Object.assign(FOLDERS, fo);
+    if(fc) formCfg = Object.assign(formCfg, fc);
+    if(pr){
+      const was = {minOrder: pricing.minOrder, lossMultiple: pricing.lossMultiple};
+      pricing = Object.assign(pricing, pr);
+      const v = pr.v || 1;
+      if(v < 2) pricing.minOrder = was.minOrder;
+      if(v < 3) pricing.lossMultiple = was.lossMultiple;
+      pricing.v = 3;
+    }
+    isAdmin = true;
+  }
+
+  render();
+  if(isAdmin){
+    document.getElementById("btnSettings").classList.remove("hidden");
+    showAdminBar();
+  }
+  if(!hasPublished) autoManifest();
+
+  document.getElementById("studioLink").onclick = ()=> isAdmin ? publish() : askPass();
+  if(location.hash === "#admin" && !isAdmin) askPass();
+})();
+</script>
+</body>
+</html>
